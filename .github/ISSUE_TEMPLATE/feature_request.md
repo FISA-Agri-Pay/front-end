@@ -1,6 +1,6 @@
 ---
 name: feature_request
-about: Suggest an idea for this project
+about: 기능에 관한 이슈를 생성해주세요.
 title: "[feature]"
 labels: ''
 assignees: ''
