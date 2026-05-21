@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* 스크롤 바운스 방지 + 노치/홈바 safe-area 대응 */
 html, body {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, 'Helvetica Neue', sans-serif;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
 }
