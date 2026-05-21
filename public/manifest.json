@@ -1,0 +1,18 @@
+{
+  "name": "콩콩팥팥",
+  "short_name": "콩콩팥팥",
+  "description": "농업 데이터로 신용을 만들고 수확으로 갚는 농민 BNPL",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#2F5D3A",
+  "background_color": "#F4F1EA",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
