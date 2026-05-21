@@ -5,7 +5,7 @@ import { colors } from '../styles/colors';
 const navItems = [
   { label: '홈', icon: Home, path: '/home' },
   { label: '농자재 상점', icon: ShoppingBag, path: '/shop' },
-  { label: '내역조회', icon: FileText, path: '/apply' },
+  { label: '내역조회', icon: FileText, path: '/history' },
   { label: '마이페이지', icon: User, path: '/mypage' },
 ];
 
