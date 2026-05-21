@@ -1,13 +1,30 @@
 import { useNavigate } from 'react-router-dom';
-import { Bell, ChevronRight } from 'lucide-react';
+import { Bell, ChevronRight, Truck } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { colors } from '../styles/colors';
-import kkppImg from '../assets/app_logo_title.png';
+import logoImg from '../assets/app_logo_title.png';
 
-const products = [
-  { id: 1, name: '복합1 비료 20kg', price: 50000, emoji: '🌿' },
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  emoji: string;
+};
+
+const products: Product[] = [
+  { id: 1, name: '복합 비료 20kg', price: 50000, emoji: '🌿' },
   { id: 2, name: '스마트팜 센서 키트', price: 250000, emoji: '📡' },
   { id: 3, name: '최신형 트랙터 대여', price: 250000, emoji: '🚜' },
+];
+
+type Delivery = {
+  id: number;
+  itemName: string;
+  status: string;
+};
+
+const deliveries: Delivery[] = [
+  { id: 1, itemName: '복합 비료 20kg', status: '배송 중' },
 ];
 
 export default function HomePage() {
@@ -16,14 +33,14 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
 
-      {/* 로고 & 알림 */}
+      {/* 상단 로고 & 알림 */}
       <div
         className="flex items-center justify-between"
-        style={{ paddingTop: 14, paddingLeft: 20, paddingRight: 20 }}
+        style={{ paddingTop: 14, paddingLeft: 29, paddingRight: 20 }}
       >
         <img
-          src={kkppImg}
-          alt="콩콩팥팥 로고"
+          src={logoImg}
+          alt="로고"
           style={{ width: 77, height: 37, objectFit: 'contain' }}
         />
         <button className="relative p-1">
@@ -38,17 +55,17 @@ export default function HomePage() {
       {/* 외상 신용 카드 */}
       <div
         style={{
-          margin: '18px 20px 0',
+          margin: '14px 20px 0',
           backgroundColor: colors.primary,
           borderRadius: 20,
-          height: 208,
+          height: 218,
           position: 'relative',
           overflow: 'hidden',
         }}
       >
         {/* 카드 본문 */}
-        <div style={{ padding: '18px 20px 0' }}>
-          <p style={{ color: colors.subGreen, fontSize: 14, lineHeight: '17px' }}>
+        <div style={{ padding: '20px 20px 0' }}>
+          <p style={{ color: colors.subGreen, fontSize: 16, lineHeight: '17px' }}>
             현재 외상 금액
           </p>
           <p
@@ -57,10 +74,11 @@ export default function HomePage() {
               fontSize: 28,
               fontWeight: 700,
               lineHeight: '34px',
-              marginTop: 4,
+              marginTop: 5,
             }}
           >
-            2,500,000 원
+            2,500,000
+            <span style={{ fontSize: 24, marginLeft: 2 }}> 원</span>
           </p>
 
           {/* progress bar */}
@@ -74,7 +92,7 @@ export default function HomePage() {
           >
             <div
               style={{
-                width: '62.5%', /* 2,500,000 / 4,000,000 */
+                width: '62.5%',
                 height: '100%',
                 backgroundColor: colors.subGreen,
                 borderRadius: 4,
@@ -82,24 +100,26 @@ export default function HomePage() {
             />
           </div>
 
-          <p style={{ color: colors.subGreen, fontSize: 12, lineHeight: '15px', marginTop: 4 }}>
-            총 한도 4,000,000원 중 2,500,000원 사용
+          <p style={{ color: colors.subGreen, fontSize: 14, lineHeight: '15px', marginTop: 7 }}>
+            총 한도 <span style={{ fontWeight: 'bold' }}>4,000,000</span>원 중{' '}
+            <span>2,500,000</span>원 사용
           </p>
         </div>
 
-        {/* 상환하기 버튼 (카드 내부) */}
+        {/* 상환하기 버튼 */}
         <button
+          onClick={() => navigate('/wallet')}
           style={{
             position: 'absolute',
-            bottom: 22,
+            bottom: 20,
             left: 20,
             right: 20,
-            height: 36,
+            height: 38,
             backgroundColor: colors.white,
             color: colors.primary,
             borderRadius: 10,
             fontWeight: 700,
-            fontSize: 16,
+            fontSize: 18,
             border: 'none',
             cursor: 'pointer',
           }}
@@ -111,9 +131,9 @@ export default function HomePage() {
       {/* 오늘의 추천 기자재 타이틀 */}
       <div
         className="flex items-center justify-between"
-        style={{ marginTop: 24, paddingLeft: 23, paddingRight: 17, marginBottom: 12 }}
+        style={{ marginTop: 24, paddingLeft: 23, paddingRight: 17, marginBottom: 10 }}
       >
-        <p style={{ fontWeight: 700, fontSize: 16, color: colors.text.dark }}>
+        <p style={{ fontWeight: 700, fontSize: 18, color: colors.text.dark }}>
           오늘의 추천 기자재
         </p>
         <button
@@ -125,7 +145,7 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* 상품 가로 스크롤 */}
+      {/* 추천 상품 리스트 */}
       <div
         className="flex overflow-x-auto"
         style={{ paddingLeft: 21, gap: 10, scrollbarWidth: 'none' }}
@@ -142,7 +162,6 @@ export default function HomePage() {
               borderRadius: 12,
             }}
           >
-            {/* 이미지 영역 */}
             <div
               className="flex items-center justify-center"
               style={{
@@ -155,22 +174,14 @@ export default function HomePage() {
             >
               {p.emoji}
             </div>
-            {/* 상품명 + 가격 */}
-            <div style={{ paddingLeft: 9, paddingRight: 9 }}>
-              <p
-                style={{
-                  fontWeight: 700,
-                  fontSize: 10,
-                  lineHeight: '12px',
-                  color: colors.text.dark,
-                }}
-              >
+            <div style={{ paddingLeft: 14, paddingRight: 10 }}>
+              <p style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}>
                 {p.name}
               </p>
               <p
                 style={{
                   fontWeight: 700,
-                  fontSize: 13,
+                  fontSize: 14,
                   lineHeight: '16px',
                   color: colors.text.dark,
                   marginTop: 4,
@@ -181,74 +192,48 @@ export default function HomePage() {
             </div>
           </div>
         ))}
-        {/* 오른쪽 여백 */}
         <div style={{ minWidth: 21, flexShrink: 0 }} />
       </div>
 
-      {/* ── 배송 상태 알림 카드 ── */}
-      <div
-        style={{
-          margin: '20px 23px 0',
-          backgroundColor: colors.white,
-          border: '1px solid #E5E0D2',
-          borderRadius: 12,
-          height: 76,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 12px',
-        }}
-      >
-        {/* 상품 이미지 */}
-        <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: 40,
-            height: 40,
-            backgroundColor: colors.bg,
-            borderRadius: 6,
-            fontSize: 20,
-          }}
-        >
-          🌿
-        </div>
-
-        {/* 텍스트 */}
-        <div style={{ flex: 1, marginLeft: 12 }}>
-          <p
+      {/* 배송 상태 알림 카드 목록 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '30px 23px 0' }}>
+        {deliveries.map((delivery) => (
+          <div
+            key={delivery.id}
             style={{
-              fontWeight: 700,
-              fontSize: 16,
-              lineHeight: '19px',
-              color: colors.text.dark,
+              backgroundColor: colors.white,
+              border: '1px solid #E5E0D2',
+              borderRadius: 12,
+              height: 76,
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 12px',
             }}
           >
-            최근 주문한 '복합 비료 20kg'가
-          </p>
-          <p
-            style={{
-              fontWeight: 700,
-              fontSize: 15,
-              lineHeight: '18px',
-              color: colors.primary,
-              marginTop: 2,
-            }}
-          >
-            배송 중입니다.
-          </p>
-        </div>
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{ width: 42, height: 42, backgroundColor: colors.bg, borderRadius: '50%' }}
+            >
+              <Truck size={22} color={colors.text.muted} strokeWidth={2} />
+            </div>
 
-        {/* 화살표 */}
-        <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: 20,
-            height: 20,
-            border: '2px solid #CFC8B3',
-            borderRadius: 4,
-          }}
-        >
-          <ChevronRight size={12} color="#CFC8B3" strokeWidth={2.5} />
-        </div>
+            <div style={{ flex: 1, marginLeft: 12 }}>
+              <p style={{ fontWeight: 700, fontSize: 16, lineHeight: '19px', color: colors.text.dark }}>
+                최근 주문한 '{delivery.itemName}'가
+              </p>
+              <p style={{ fontWeight: 700, fontSize: 15, lineHeight: '18px', color: colors.text.dark, marginTop: 2 }}>
+                <span style={{ color: colors.primary }}>{delivery.status}</span>입니다.
+              </p>
+            </div>
+
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{ width: 20, height: 20, borderRadius: 4 }}
+            >
+              <ChevronRight size={24} color="#CFC8B3" />
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="flex-1" />
