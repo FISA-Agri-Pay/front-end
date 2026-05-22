@@ -4,7 +4,7 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
 import HistoryPage from './pages/HistoryPage';
-import WalletPage from './pages/WalletPage';
+import MyPage from './pages/MyPage';
 
 function App() {
   return (
@@ -17,7 +17,7 @@ function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/history" element={<HistoryPage />} />
-            <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/mypage" element={<MyPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
