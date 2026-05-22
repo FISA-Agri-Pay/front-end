@@ -1,4 +1,5 @@
 import { ChevronRight, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import PageHeader from '../components/PageHeader';
 import { colors } from '../styles/colors';
@@ -16,11 +17,6 @@ const farmMenu = [
   { id: 3, label: '농작물 재해보험 가입',  value: '가입' },
 ];
 
-const settingsMenu = [
-  { id: 1, label: '간편 비밀번호 / 생체인증 관리' },
-  { id: 2, label: '내 지갑 관리' },
-];
-
 const supportMenu = [
   { id: 1, label: '공지사항' },
   { id: 2, label: '자주 묻는 질문 / 고객센터' },
@@ -33,17 +29,18 @@ interface MenuItem {
   id: number;
   label: string;
   value?: string;
+  onClick?: () => void;
 }
 
 function MenuCard({ items }: { items: MenuItem[] }) {
   return (
     <div className="mx-5 bg-white rounded-xl overflow-hidden">
-      {items.map(({ id, label, value }, i) => (
+      {items.map(({ id, label, value, onClick }, i) => (
         <div key={id}>
           {i > 0 && (
             <div style={{ height: 1, backgroundColor: '#F0EDE5', marginLeft: 16, marginRight: 16 }} />
           )}
-          <button className="w-full flex items-center justify-between px-4 py-[15px]">
+          <button className="w-full flex items-center justify-between px-4 py-[15px]" onClick={onClick}>
             <span className="text-[14px]" style={{ color: colors.text.dark }}>
               {label}
             </span>
@@ -65,6 +62,13 @@ function MenuCard({ items }: { items: MenuItem[] }) {
 // ─── 페이지 ───────────────────────────────────────────────────────────────────
 
 export default function MyPage() {
+  const navigate = useNavigate();
+
+  const settingsMenu: MenuItem[] = [
+    { id: 1, label: '간편 비밀번호 / 생체인증 관리' },
+    { id: 2, label: '내 지갑 관리', onClick: () => navigate('/wallet') },
+  ];
+
   return (
     <div className="flex flex-col min-h-screen pb-20" style={{ backgroundColor: colors.bg }}>
       <PageHeader title="마이페이지" />
