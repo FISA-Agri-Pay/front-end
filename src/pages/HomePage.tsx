@@ -3,6 +3,7 @@ import { Bell, ChevronRight, Truck } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { colors } from '../styles/colors';
 import logoImg from '../assets/app_logo_title.png';
+import CreditLimitCard, { type CreditStatus } from '../components/CreditLimitCard';
 
 type Product = {
   id: number;
@@ -30,6 +31,9 @@ const deliveries: Delivery[] = [
 export default function HomePage() {
   const navigate = useNavigate();
 
+  const creditStatus: CreditStatus = 'completed';
+  const userName = '김농부';
+
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
 
@@ -52,80 +56,9 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* 외상 신용 카드 */}
-      <div
-        style={{
-          margin: '14px 20px 0',
-          backgroundColor: colors.primary,
-          borderRadius: 20,
-          height: 218,
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* 카드 본문 */}
-        <div style={{ padding: '20px 20px 0' }}>
-          <p style={{ color: colors.subGreen, fontSize: 16, lineHeight: '17px' }}>
-            현재 외상 금액
-          </p>
-          <p
-            style={{
-              color: colors.white,
-              fontSize: 28,
-              fontWeight: 700,
-              lineHeight: '34px',
-              marginTop: 5,
-            }}
-          >
-            2,500,000
-            <span style={{ fontSize: 24, marginLeft: 2 }}> 원</span>
-          </p>
-
-          {/* progress bar */}
-          <div
-            style={{
-              marginTop: 22,
-              height: 8,
-              backgroundColor: '#1F4128',
-              borderRadius: 4,
-            }}
-          >
-            <div
-              style={{
-                width: '62.5%',
-                height: '100%',
-                backgroundColor: colors.subGreen,
-                borderRadius: 4,
-              }}
-            />
-          </div>
-
-          <p style={{ color: colors.subGreen, fontSize: 14, lineHeight: '15px', marginTop: 7 }}>
-            총 한도 <span style={{ fontWeight: 'bold' }}>4,000,000</span>원 중{' '}
-            <span>2,500,000</span>원 사용
-          </p>
-        </div>
-
-        {/* 상환하기 버튼 */}
-        <button
-          onClick={() => navigate('/wallet')}
-          style={{
-            position: 'absolute',
-            bottom: 20,
-            left: 20,
-            right: 20,
-            height: 38,
-            backgroundColor: colors.white,
-            color: colors.primary,
-            borderRadius: 10,
-            fontWeight: 700,
-            fontSize: 18,
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          상환하기
-        </button>
+      {/* 외상 한도 카드 */}
+      <div style={{ margin: '14px 20px 0' }}>
+        <CreditLimitCard status={creditStatus} userName={userName} />
       </div>
 
       {/* 오늘의 추천 기자재 타이틀 */}
