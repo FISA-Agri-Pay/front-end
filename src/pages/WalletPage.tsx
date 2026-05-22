@@ -71,7 +71,7 @@ export default function WalletPage() {
       <div
         style={{
           margin: '16px 20px 0',
-          backgroundColor: '#DCE8DA',
+          backgroundColor: colors.subGreen,
           borderRadius: 10,
           padding: '16px 15px',
           display: 'flex',

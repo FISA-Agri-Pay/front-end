@@ -50,7 +50,7 @@ export default function HomePage() {
           alt="로고"
           style={{ width: 77, height: 37, objectFit: 'contain' }}
         />
-        <button className="relative p-1">
+        <button type="button" aria-label="알림" className="relative p-1">
           <Bell size={22} color={colors.text.dark} />
           <span
             className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full"
