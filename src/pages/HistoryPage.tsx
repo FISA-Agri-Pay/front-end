@@ -91,6 +91,11 @@ export default function HistoryPage() {
       {/* 외상 이용 내역 */}
       {activeTab === 'usage' && (
         <div className="mx-5 flex flex-col gap-3">
+          {mockUsage.length === 0 && (
+            <p className="py-8 text-center text-sm" style={{ color: colors.text.muted }}>
+              외상 이용 내역이 없습니다.
+            </p>
+          )}
           {mockUsage.map((item) => {
             const { bg, color } = STATUS_STYLE[item.status];
             return (
@@ -110,6 +115,11 @@ export default function HistoryPage() {
       {/* 상환 및 납부 내역 */}
       {activeTab === 'repayment' && (
         <div className="mx-5 flex flex-col gap-3">
+          {mockPayments.length === 0 && (
+            <p className="py-8 text-center text-sm" style={{ color: colors.text.muted }}>
+              상환 및 납부 내역이 없습니다.
+            </p>
+          )}
           {mockPayments.map((item) => (
             <HistoryItemCard
               key={item.id}
