@@ -11,7 +11,7 @@ export const colors = {
   subGreen: '#DCE8DA',
 
   /** 배경 베이지*/
-  bg: '#F4F1EA',
+  bg: '#F5F1E8',
 
   text: {
     /** 주요 텍스트*/

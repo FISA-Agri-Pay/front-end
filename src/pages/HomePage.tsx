@@ -1,32 +1,56 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, ChevronRight } from 'lucide-react';
+import { Bell, ChevronRight, Truck } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { colors } from '../styles/colors';
-import kkppImg from '../assets/app_logo_title.png';
+import logoImg from '../assets/app_logo_title.png';
+import CreditLimitCard, { type CreditStatus } from '../components/CreditLimitCard';
 
-const products = [
-  { id: 1, name: '복합1 비료 20kg', price: 50000, emoji: '🌿' },
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  emoji: string;
+};
+
+const products: Product[] = [
+  { id: 1, name: '복합 비료 20kg', price: 50000, emoji: '🌿' },
   { id: 2, name: '스마트팜 센서 키트', price: 250000, emoji: '📡' },
   { id: 3, name: '최신형 트랙터 대여', price: 250000, emoji: '🚜' },
+];
+
+type Delivery = {
+  id: number;
+  itemName: string;
+  status: string;
+};
+
+const deliveries: Delivery[] = [
+  { id: 1, itemName: '복합 비료 20kg', status: '배송 중' },
 ];
 
 export default function HomePage() {
   const navigate = useNavigate();
 
+  const [creditStatus] = useState<CreditStatus>('completed');
+  const userName = '김농부';
+  const creditLimit = 4000000;
+  const creditUsed = 2500000;
+
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
 
-      {/* 로고 & 알림 */}
+      {/* 상단 로고 & 알림 */}
       <div
         className="flex items-center justify-between"
-        style={{ paddingTop: 14, paddingLeft: 20, paddingRight: 20 }}
+        style={{ paddingTop: 14, paddingLeft: 29, paddingRight: 20 }}
       >
         <img
-          src={kkppImg}
-          alt="콩콩팥팥 로고"
+          src={logoImg}
+          alt="로고"
           style={{ width: 77, height: 37, objectFit: 'contain' }}
         />
-        <button className="relative p-1">
+        <button type="button" aria-label="알림" className="relative p-1">
           <Bell size={22} color={colors.text.dark} />
           <span
             className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full"
@@ -35,97 +59,31 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* 외상 신용 카드 */}
-      <div
-        style={{
-          margin: '18px 20px 0',
-          backgroundColor: colors.primary,
-          borderRadius: 20,
-          height: 208,
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* 카드 본문 */}
-        <div style={{ padding: '18px 20px 0' }}>
-          <p style={{ color: colors.subGreen, fontSize: 14, lineHeight: '17px' }}>
-            현재 외상 금액
-          </p>
-          <p
-            style={{
-              color: colors.white,
-              fontSize: 28,
-              fontWeight: 700,
-              lineHeight: '34px',
-              marginTop: 4,
-            }}
-          >
-            2,500,000 원
-          </p>
-
-          {/* progress bar */}
-          <div
-            style={{
-              marginTop: 22,
-              height: 8,
-              backgroundColor: '#1F4128',
-              borderRadius: 4,
-            }}
-          >
-            <div
-              style={{
-                width: '62.5%', /* 2,500,000 / 4,000,000 */
-                height: '100%',
-                backgroundColor: colors.subGreen,
-                borderRadius: 4,
-              }}
-            />
-          </div>
-
-          <p style={{ color: colors.subGreen, fontSize: 12, lineHeight: '15px', marginTop: 4 }}>
-            총 한도 4,000,000원 중 2,500,000원 사용
-          </p>
-        </div>
-
-        {/* 상환하기 버튼 (카드 내부) */}
-        <button
-          style={{
-            position: 'absolute',
-            bottom: 22,
-            left: 20,
-            right: 20,
-            height: 36,
-            backgroundColor: colors.white,
-            color: colors.primary,
-            borderRadius: 10,
-            fontWeight: 700,
-            fontSize: 16,
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          상환하기
-        </button>
+      {/* 외상 한도 카드 */}
+      <div style={{ margin: '14px 20px 0' }}>
+        <CreditLimitCard status={creditStatus} userName={userName} limit={creditLimit} used={creditUsed} />
       </div>
 
-      {/* 오늘의 추천 기자재 타이틀 */}
+      {/* 추천 기자재 타이틀 */}
       <div
         className="flex items-center justify-between"
-        style={{ marginTop: 24, paddingLeft: 23, paddingRight: 17, marginBottom: 12 }}
+        style={{ marginTop: 24, paddingLeft: 23, paddingRight: 17, marginBottom: 10 }}
       >
-        <p style={{ fontWeight: 700, fontSize: 16, color: colors.text.dark }}>
-          오늘의 추천 기자재
+        <p style={{ fontWeight: 700, fontSize: 18, color: colors.text.dark }}>
+          {creditStatus === 'completed' ? '오늘의 추천 기자재' : '한도를 받으면 이런 자재를 바로 살 수 있어요'}
         </p>
-        <button
-          className="flex items-center"
-          style={{ fontSize: 12, color: colors.text.muted }}
-          onClick={() => navigate('/shop')}
-        >
-          전체보기 <ChevronRight size={14} />
-        </button>
+        {creditStatus === 'completed' && (
+          <button
+            className="flex items-center"
+            style={{ fontSize: 12, color: colors.text.muted }}
+            onClick={() => navigate('/shop')}
+          >
+            전체보기 <ChevronRight size={14} />
+          </button>
+        )}
       </div>
 
-      {/* 상품 가로 스크롤 */}
+      {/* 추천 상품 리스트 */}
       <div
         className="flex overflow-x-auto"
         style={{ paddingLeft: 21, gap: 10, scrollbarWidth: 'none' }}
@@ -136,13 +94,12 @@ export default function HomePage() {
             className="flex-shrink-0"
             style={{
               width: 128,
-              height: 172,
               backgroundColor: colors.white,
               border: '1px solid #E5E0D2',
               borderRadius: 12,
+              paddingBottom: 10,
             }}
           >
-            {/* 이미지 영역 */}
             <div
               className="flex items-center justify-center"
               style={{
@@ -155,22 +112,14 @@ export default function HomePage() {
             >
               {p.emoji}
             </div>
-            {/* 상품명 + 가격 */}
-            <div style={{ paddingLeft: 9, paddingRight: 9 }}>
-              <p
-                style={{
-                  fontWeight: 700,
-                  fontSize: 10,
-                  lineHeight: '12px',
-                  color: colors.text.dark,
-                }}
-              >
+            <div style={{ paddingLeft: 12, paddingRight: 10 }}>
+              <p style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}>
                 {p.name}
               </p>
               <p
                 style={{
                   fontWeight: 700,
-                  fontSize: 13,
+                  fontSize: 14,
                   lineHeight: '16px',
                   color: colors.text.dark,
                   marginTop: 4,
@@ -179,76 +128,66 @@ export default function HomePage() {
                 {p.price.toLocaleString()}원
               </p>
             </div>
+            {creditStatus !== 'completed' && (
+              <div style={{ paddingLeft: 10, paddingRight: 10, marginTop: 12 }}>
+                <div
+                  style={{
+                    backgroundColor: colors.bg,
+                    borderRadius: 6,
+                    paddingBottom: 4,
+                    textAlign: 'center',
+                  }}
+                >
+                  <span style={{ fontSize: 10, fontWeight: 700, color: colors.text.muted }}>
+                    한도 산정 후 구매 가능
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         ))}
-        {/* 오른쪽 여백 */}
         <div style={{ minWidth: 21, flexShrink: 0 }} />
       </div>
 
-      {/* ── 배송 상태 알림 카드 ── */}
-      <div
-        style={{
-          margin: '20px 23px 0',
-          backgroundColor: colors.white,
-          border: '1px solid #E5E0D2',
-          borderRadius: 12,
-          height: 76,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 12px',
-        }}
-      >
-        {/* 상품 이미지 */}
-        <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: 40,
-            height: 40,
-            backgroundColor: colors.bg,
-            borderRadius: 6,
-            fontSize: 20,
-          }}
-        >
-          🌿
-        </div>
-
-        {/* 텍스트 */}
-        <div style={{ flex: 1, marginLeft: 12 }}>
-          <p
+      {/* 배송 상태 알림 카드 목록 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '30px 23px 0' }}>
+        {deliveries.map((delivery) => (
+          <div
+            key={delivery.id}
             style={{
-              fontWeight: 700,
-              fontSize: 16,
-              lineHeight: '19px',
-              color: colors.text.dark,
+              backgroundColor: colors.white,
+              border: '1px solid #E5E0D2',
+              borderRadius: 12,
+              height: 76,
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 12px',
             }}
           >
-            최근 주문한 '복합 비료 20kg'가
-          </p>
-          <p
-            style={{
-              fontWeight: 700,
-              fontSize: 15,
-              lineHeight: '18px',
-              color: colors.primary,
-              marginTop: 2,
-            }}
-          >
-            배송 중입니다.
-          </p>
-        </div>
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{ width: 42, height: 42, backgroundColor: colors.bg, borderRadius: '50%' }}
+            >
+              <Truck size={22} color={colors.text.muted} strokeWidth={2} />
+            </div>
 
-        {/* 화살표 */}
-        <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            width: 20,
-            height: 20,
-            border: '2px solid #CFC8B3',
-            borderRadius: 4,
-          }}
-        >
-          <ChevronRight size={12} color="#CFC8B3" strokeWidth={2.5} />
-        </div>
+            <div style={{ flex: 1, marginLeft: 12 }}>
+              <p style={{ fontWeight: 700, fontSize: 16, lineHeight: '19px', color: colors.text.dark }}>
+                최근 주문한 '{delivery.itemName}'가
+              </p>
+              <p style={{ fontWeight: 700, fontSize: 15, lineHeight: '18px', color: colors.text.dark, marginTop: 2 }}>
+                <span style={{ color: colors.primary }}>{delivery.status}</span>입니다.
+              </p>
+            </div>
+
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{ width: 20, height: 20, borderRadius: 4 }}
+            >
+              <ChevronRight size={24} color="#CFC8B3" />
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="flex-1" />
