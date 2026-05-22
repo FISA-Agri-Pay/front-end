@@ -34,6 +34,8 @@ export default function HomePage() {
 
   const [creditStatus] = useState<CreditStatus>('completed');
   const userName = '김농부';
+  const creditLimit = 4000000;
+  const creditUsed = 2500000;
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
@@ -59,7 +61,7 @@ export default function HomePage() {
 
       {/* 외상 한도 카드 */}
       <div style={{ margin: '14px 20px 0' }}>
-        <CreditLimitCard status={creditStatus} userName={userName} />
+        <CreditLimitCard status={creditStatus} userName={userName} limit={creditLimit} used={creditUsed} />
       </div>
 
       {/* 추천 기자재 타이틀 */}

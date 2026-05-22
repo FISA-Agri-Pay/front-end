@@ -139,6 +139,10 @@ function CreditCardRejected({ userName }: { userName: string }) {
 
 function CreditCardCompleted({ limit, used }: { limit: number; used: number }) {
   const navigate = useNavigate();
+  const usagePercent =
+    Number.isFinite(limit) && limit > 0
+      ? Math.max(0, Math.min((used / limit) * 100, 100))
+      : 0;
   return (
     <div
       style={{
@@ -175,7 +179,7 @@ function CreditCardCompleted({ limit, used }: { limit: number; used: number }) {
         >
           <div
             style={{
-              width: `${Math.min((used / limit) * 100, 100)}%`,
+              width: `${usagePercent}%`,
               height: '100%',
               backgroundColor: colors.subGreen,
               borderRadius: 4,
@@ -213,9 +217,13 @@ function CreditCardCompleted({ limit, used }: { limit: number; used: number }) {
 export default function CreditLimitCard({
   status,
   userName,
+  limit,
+  used,
 }: {
   status: CreditStatus;
   userName: string;
+  limit?: number;
+  used?: number;
 }) {
   switch (status) {
     case 'before':
@@ -225,6 +233,6 @@ export default function CreditLimitCard({
     case 'rejected':
       return <CreditCardRejected userName={userName} />;
     case 'completed':
-      return <CreditCardCompleted limit={4000000} used={2500000} />;
+      return <CreditCardCompleted limit={limit ?? 0} used={used ?? 0} />;
   }
 }
