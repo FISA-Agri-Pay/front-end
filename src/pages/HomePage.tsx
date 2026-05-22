@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, ChevronRight, Truck } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
@@ -31,7 +32,7 @@ const deliveries: Delivery[] = [
 export default function HomePage() {
   const navigate = useNavigate();
 
-  const creditStatus: CreditStatus = 'completed';
+  const [creditStatus] = useState<CreditStatus>('completed');
   const userName = '김농부';
 
   return (
@@ -61,21 +62,23 @@ export default function HomePage() {
         <CreditLimitCard status={creditStatus} userName={userName} />
       </div>
 
-      {/* 오늘의 추천 기자재 타이틀 */}
+      {/* 추천 기자재 타이틀 */}
       <div
         className="flex items-center justify-between"
         style={{ marginTop: 24, paddingLeft: 23, paddingRight: 17, marginBottom: 10 }}
       >
         <p style={{ fontWeight: 700, fontSize: 18, color: colors.text.dark }}>
-          오늘의 추천 기자재
+          {creditStatus === 'completed' ? '오늘의 추천 기자재' : '한도를 받으면 이런 자재를 바로 살 수 있어요'}
         </p>
-        <button
-          className="flex items-center"
-          style={{ fontSize: 12, color: colors.text.muted }}
-          onClick={() => navigate('/shop')}
-        >
-          전체보기 <ChevronRight size={14} />
-        </button>
+        {creditStatus === 'completed' && (
+          <button
+            className="flex items-center"
+            style={{ fontSize: 12, color: colors.text.muted }}
+            onClick={() => navigate('/shop')}
+          >
+            전체보기 <ChevronRight size={14} />
+          </button>
+        )}
       </div>
 
       {/* 추천 상품 리스트 */}
@@ -89,10 +92,10 @@ export default function HomePage() {
             className="flex-shrink-0"
             style={{
               width: 128,
-              height: 172,
               backgroundColor: colors.white,
               border: '1px solid #E5E0D2',
               borderRadius: 12,
+              paddingBottom: 10,
             }}
           >
             <div
@@ -107,7 +110,7 @@ export default function HomePage() {
             >
               {p.emoji}
             </div>
-            <div style={{ paddingLeft: 14, paddingRight: 10 }}>
+            <div style={{ paddingLeft: 12, paddingRight: 10 }}>
               <p style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}>
                 {p.name}
               </p>
@@ -123,6 +126,22 @@ export default function HomePage() {
                 {p.price.toLocaleString()}원
               </p>
             </div>
+            {creditStatus !== 'completed' && (
+              <div style={{ paddingLeft: 10, paddingRight: 10, marginTop: 12 }}>
+                <div
+                  style={{
+                    backgroundColor: colors.bg,
+                    borderRadius: 6,
+                    paddingBottom: 4,
+                    textAlign: 'center',
+                  }}
+                >
+                  <span style={{ fontSize: 10, fontWeight: 700, color: colors.text.muted }}>
+                    한도 산정 후 구매 가능
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         ))}
         <div style={{ minWidth: 21, flexShrink: 0 }} />
