@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import AssStepHeader from './AssStepHeader';
 import { colors } from '../../styles/colors';
 
@@ -8,12 +8,32 @@ interface AssInsuranceProps {
 }
 
 const OPTIONS = [
-  { id: true,  label: '예, 가입했어요' },
+  { id: true,  label: '예, 가입했어요'   },
   { id: false, label: '아니요, 안 했어요' },
 ];
 
 export default function AssInsurance({ onNext, onBack }: AssInsuranceProps) {
   const [hasInsurance, setHasInsurance] = useState<boolean | null>(null);
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleKeyDown = (e: React.KeyboardEvent, idx: number) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      setHasInsurance(OPTIONS[idx].id);
+      return;
+    }
+    const next =
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? (idx + 1) % OPTIONS.length
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+        ? (idx - 1 + OPTIONS.length) % OPTIONS.length
+        : null;
+    if (next !== null) {
+      e.preventDefault();
+      setHasInsurance(OPTIONS[next].id);
+      btnRefs.current[next]?.focus();
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
@@ -34,14 +54,26 @@ export default function AssInsurance({ onNext, onBack }: AssInsuranceProps) {
         </h1>
       </div>
 
-      {/* 선택 옵션 */}
-      <div className="flex-1 flex flex-col gap-3" style={{ paddingLeft: 20, paddingRight: 20 }}>
-        {OPTIONS.map(({ id, label }) => {
+      {/* 선택 옵션 — radiogroup */}
+      <div
+        className="flex-1 flex flex-col gap-3"
+        style={{ paddingLeft: 20, paddingRight: 20 }}
+        role="radiogroup"
+        aria-label="농작물 재해보험 가입 여부"
+      >
+        {OPTIONS.map(({ id, label }, idx) => {
           const isSelected = hasInsurance === id;
           return (
             <button
               key={String(id)}
+              ref={(el) => { btnRefs.current[idx] = el; }}
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={label}
+              tabIndex={isSelected || (hasInsurance === null && idx === 0) ? 0 : -1}
               onClick={() => setHasInsurance(id)}
+              onKeyDown={(e) => handleKeyDown(e, idx)}
               className="flex items-center w-full rounded-xl"
               style={{
                 height: 80,
@@ -52,7 +84,7 @@ export default function AssInsurance({ onNext, onBack }: AssInsuranceProps) {
                 paddingLeft: 20,
               }}
             >
-              {/* 라디오 버튼 */}
+              {/* 라디오 원 */}
               <div
                 className="flex items-center justify-center flex-shrink-0 rounded-full"
                 style={{
@@ -90,6 +122,7 @@ export default function AssInsurance({ onNext, onBack }: AssInsuranceProps) {
       {/* 하단 버튼 */}
       <div style={{ padding: '16px 20px 32px' }}>
         <button
+          type="button"
           onClick={onNext}
           className="w-full font-bold"
           style={{

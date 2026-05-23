@@ -15,6 +15,8 @@ export default function AssStepHeader({ title, step, total = 4, onBack }: AssSte
       style={{ paddingTop: 20, paddingBottom: 16, paddingLeft: 16, paddingRight: 16 }}
     >
       <button
+        type="button"
+        aria-label="뒤로 가기"
         onClick={onBack}
         className="absolute left-4 flex items-center justify-center"
         style={{ padding: 4 }}
