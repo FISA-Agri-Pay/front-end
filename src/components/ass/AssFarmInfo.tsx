@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import AssStepHeader from './AssStepHeader';
 import { colors } from '../../styles/colors';
 
@@ -7,48 +8,99 @@ interface AssFarmInfoProps {
 }
 
 export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
-  // 추후 formData로 연결할 로컬 state
-  // const [address, setAddress] = useState('');
-  // const [area, setArea] = useState('');
+  const [address, setAddress] = useState('');
+  const [area, setArea] = useState('');
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
-      <AssStepHeader title="농지정보 등록" step={1} onBack={onBack} />
+      <AssStepHeader title="농지 정보 등록" step={1} onBack={onBack} />
 
-      {/* 입력 폼 (추후 구현) */}
-      <div className="flex-1 px-5 pt-4">
-        <p className="text-[14px]" style={{ color: colors.text.muted }}>
-          농지 주소와 면적을 입력해 주세요
-        </p>
+      {/* 안내 문구 */}
+      <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 16, marginBottom: 32 }}>
+        <h1
+          style={{
+            fontWeight: 700,
+            fontSize: 24,
+            lineHeight: '32px',
+            color: colors.text.dark,
+            whiteSpace: 'pre-line',
+          }}
+        >
+          {'농사짓는 땅의 주소와\n면적을 입력해 주세요'}
+        </h1>
+      </div>
 
-        {/* 주소 입력 (placeholder) */}
-        <div className="mt-6">
-          <label className="block text-[13px] font-bold mb-2" style={{ color: colors.text.mid }}>
+      {/* 폼 영역 */}
+      <div className="flex-1" style={{ paddingLeft: 20, paddingRight: 20 }}>
+
+        {/* 주소 */}
+        <div className="mb-6">
+          <label
+            className="block font-bold text-[14px] mb-2"
+            style={{ color: colors.text.muted }}
+          >
             주소
           </label>
           <div
-            className="w-full h-[48px] rounded-xl px-4 flex items-center"
-            style={{ backgroundColor: colors.white, border: '1px solid #E5E0D2' }}
+            className="flex items-center rounded-xl bg-white"
+            style={{ border: '1px solid #E5E0D2', height: 64, paddingRight: 10 }}
           >
-            <span className="text-[14px]" style={{ color: '#C0BAB0' }}>
-              주소를 입력해 주세요
-            </span>
+            <input
+              type="text"
+              className="flex-1 pl-4 h-full bg-transparent outline-none text-[16px] placeholder:text-[#999999]"
+              placeholder="주소를 검색해 주세요"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              style={{ color: colors.text.dark }}
+            />
+            <button
+              className="shrink-0 font-bold text-[14px] rounded-lg"
+              style={{
+                backgroundColor: colors.primary,
+                color: colors.white,
+                height: 44,
+                paddingLeft: 18,
+                paddingRight: 18,
+              }}
+            >
+              주소 검색
+            </button>
           </div>
         </div>
 
-        {/* 면적 입력 (placeholder) */}
-        <div className="mt-4">
-          <label className="block text-[13px] font-bold mb-2" style={{ color: colors.text.mid }}>
-            경작 면적 (평)
+        {/* 경작 면적 */}
+        <div>
+          <label
+            className="block font-bold text-[14px] mb-2"
+            style={{ color: colors.text.muted }}
+          >
+            경작 면적
           </label>
           <div
-            className="w-full h-[48px] rounded-xl px-4 flex items-center justify-between"
-            style={{ backgroundColor: colors.white, border: '1px solid #E5E0D2' }}
+            className="flex items-center rounded-xl"
+            style={{
+              border: `2px solid ${colors.primary}`,
+              height: 64,
+              backgroundColor: colors.white,
+              paddingLeft: 5,
+              paddingRight: 20,
+            }}
           >
-            <span className="text-[14px]" style={{ color: '#C0BAB0' }}>
-              면적을 입력해 주세요
+            <input
+              type="text"
+              inputMode="numeric"
+              className="flex-1 text-right text-[22px] font-bold outline-none bg-transparent"
+              placeholder=""
+              value={area}
+              onChange={(e) => setArea(e.target.value.replace(/[^0-9]/g, ''))}
+              style={{ color: colors.text.dark }}
+            />
+            <span
+              className="text-[18px] font-bold ml-2 shrink-0"
+              style={{ color: colors.text.dark }}
+            >
+              평
             </span>
-            <span className="text-[14px]" style={{ color: colors.text.muted }}>평</span>
           </div>
         </div>
       </div>
@@ -57,8 +109,14 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
       <div style={{ padding: '16px 20px 32px' }}>
         <button
           onClick={onNext}
-          className="w-full h-[52px] rounded-xl font-bold text-[16px]"
-          style={{ backgroundColor: colors.primary, color: colors.white }}
+          className="w-full font-bold"
+          style={{
+            height: 56,
+            borderRadius: 12,
+            backgroundColor: colors.primary,
+            color: colors.white,
+            fontSize: 18,
+          }}
         >
           다음으로
         </button>
