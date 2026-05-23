@@ -6,6 +6,7 @@ import ShopPage from './pages/ShopPage';
 import HistoryPage from './pages/HistoryPage';
 import MyPage from './pages/MyPage';
 import Wallet from './pages/WalletPage';
+import AssPage from './pages/AssPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/wallet" element={<Wallet />} />
+            <Route path="/ass" element={<AssPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
