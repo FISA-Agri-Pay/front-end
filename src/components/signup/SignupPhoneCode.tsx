@@ -31,7 +31,8 @@ export default function SignupPhoneCode({
   onBack,
 }: SignupPhoneCodeProps) {
   const [remainingSeconds, setRemainingSeconds] = useState(176);
-  const isValid = code.length === 6;
+  const isTimerExpired = remainingSeconds <= 0;
+  const isValid = code.length === 6 && !isTimerExpired;
   const phoneLabel = useMemo(() => maskPhoneNumber(phoneNumber), [phoneNumber]);
 
   useEffect(() => {
@@ -46,6 +47,11 @@ export default function SignupPhoneCode({
 
   const resetTimer = () => {
     setRemainingSeconds(176);
+  };
+
+  const handleVerify = () => {
+    if (!isValid) return;
+    onVerify();
   };
 
   return (
@@ -136,7 +142,7 @@ export default function SignupPhoneCode({
         className="border-t px-6"
         style={{ borderColor: '#DCD6C2', paddingTop: 26, paddingBottom: 34 }}
       >
-        <Button onClick={onVerify} disabled={!isValid}>
+        <Button onClick={handleVerify} disabled={!isValid}>
           인증하기
         </Button>
       </footer>
