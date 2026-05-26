@@ -68,6 +68,7 @@ export default function SignupAgree({
   onBack,
 }: SignupAgreeProps) {
   const allRequiredChecked = REQUIRED_AGREEMENT_KEYS.every((key) => agreements[key]);
+  const allChecked = AGREEMENT_ITEMS.every((item) => agreements[item.key]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
@@ -115,7 +116,7 @@ export default function SignupAgree({
             onClick={onToggleAll}
             className="flex w-full items-center text-left"
           >
-            <AgreementCheck checked={allRequiredChecked} size="lg" />
+            <AgreementCheck checked={allChecked} size="lg" />
             <span
               className="ml-5"
               style={{
