@@ -51,6 +51,12 @@ function openPostcode(onComplete: (address: string, zonecode: string) => void) {
     }).open();
   };
 
+  const cleanupFailedScript = (script: HTMLElement, onLoad?: () => void, onError?: () => void) => {
+    if (onLoad) script.removeEventListener('load', onLoad);
+    if (onError) script.removeEventListener('error', onError);
+    script.remove();
+  };
+
   if (window.daum?.Postcode) {
     open();
     return;
@@ -58,15 +64,25 @@ function openPostcode(onComplete: (address: string, zonecode: string) => void) {
 
   const existingScript = document.getElementById(POSTCODE_SCRIPT_ID);
   if (existingScript) {
+    const handleExistingScriptError = () => {
+      cleanupFailedScript(existingScript, open, handleExistingScriptError);
+    };
+
     existingScript.addEventListener('load', open, { once: true });
+    existingScript.addEventListener('error', handleExistingScriptError, { once: true });
     return;
   }
 
   const script = document.createElement('script');
+  const handleScriptError = () => {
+    cleanupFailedScript(script, open, handleScriptError);
+  };
+
   script.id = POSTCODE_SCRIPT_ID;
   script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
   script.async = true;
-  script.onload = open;
+  script.addEventListener('load', open, { once: true });
+  script.addEventListener('error', handleScriptError, { once: true });
   document.body.appendChild(script);
 }
 
