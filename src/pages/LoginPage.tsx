@@ -84,7 +84,7 @@ export default function LoginPage() {
           <span>|</span>
           <button>비밀번호 찾기</button>
           <span>|</span>
-          <button>회원가입</button>
+          <button onClick={() => navigate('/signup/agree')}>회원가입</button>
         </div>
       </div>
     </div>
