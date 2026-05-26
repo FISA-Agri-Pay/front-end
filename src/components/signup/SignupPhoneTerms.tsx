@@ -1,6 +1,7 @@
 import { Check, ChevronDown, ChevronRight } from 'lucide-react';
 import Button from '../Button';
 import { colors } from '../../styles/colors';
+import { SIGNUP_MAIN_TOP_PADDING } from '../../constants/signupLayout';
 import {
   PHONE_TERM_ITEMS,
   REQUIRED_PHONE_TERM_KEYS,
@@ -14,7 +15,7 @@ interface SignupPhoneTermsProps {
   onAgreeAll: () => void;
   onOpenDetail: (key: PhoneTermKey) => void;
   onNext: () => void;
-  onClose: () => void;
+  onBack: () => void;
 }
 
 export default function SignupPhoneTerms({
@@ -23,15 +24,15 @@ export default function SignupPhoneTerms({
   onAgreeAll,
   onOpenDetail,
   onNext,
-  onClose,
+  onBack,
 }: SignupPhoneTermsProps) {
   const allChecked = REQUIRED_PHONE_TERM_KEYS.every((key) => terms[key]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
-      <SignupStepHeader title="휴대폰 인증" activeStep={2} onClose={onClose} />
+      <SignupStepHeader title="휴대폰 인증" activeStep={2} onBack={onBack} />
 
-      <main className="flex-1 px-6" style={{ paddingTop: 58 }}>
+      <main className="flex-1 px-6" style={{ paddingTop: SIGNUP_MAIN_TOP_PADDING }}>
         <h2
           style={{
             color: colors.text.dark,

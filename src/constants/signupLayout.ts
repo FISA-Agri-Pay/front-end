@@ -1,0 +1,2 @@
+export const SIGNUP_PROGRESS_TOP_MARGIN = 8;
+export const SIGNUP_MAIN_TOP_PADDING = 25;

@@ -1,5 +1,5 @@
-import { X } from 'lucide-react';
 import Button from '../Button';
+import PageHeader from '../PageHeader';
 import { colors } from '../../styles/colors';
 
 interface AgreementDetailViewData {
@@ -12,43 +12,19 @@ interface AgreementDetailViewData {
 interface SignupAgreementDetailProps {
   detail: AgreementDetailViewData;
   onAgree: () => void;
-  onClose: () => void;
+  onBack: () => void;
 }
 
 export default function SignupAgreementDetail({
   detail,
   onAgree,
-  onClose,
+  onBack,
 }: SignupAgreementDetailProps) {
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.white }}>
-      <header
-        className="relative flex items-center justify-center border-b"
-        style={{
-          borderColor: '#DCD6C2',
-          padding: '38px 20px 34px',
-        }}
-      >
-        <h1
-          style={{
-            color: colors.text.dark,
-            fontSize: 24,
-            fontWeight: 800,
-            lineHeight: '32px',
-          }}
-        >
-          약관/동의서 상세
-        </h1>
-        <button
-          type="button"
-          aria-label="상세 닫기"
-          onClick={onClose}
-          className="absolute right-5 top-[37px] flex items-center justify-center"
-          style={{ width: 38, height: 38 }}
-        >
-          <X size={34} strokeWidth={2.4} color={colors.text.dark} />
-        </button>
-      </header>
+      <div className="border-b" style={{ borderColor: '#DCD6C2' }}>
+        <PageHeader title="약관/동의서 상세" onBack={onBack} />
+      </div>
 
       <main
         className="flex-1 overflow-y-auto"

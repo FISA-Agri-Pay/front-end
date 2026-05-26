@@ -1,12 +1,14 @@
-import { Check, ChevronRight, X } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import Button from '../Button';
 import { colors } from '../../styles/colors';
+import { SIGNUP_MAIN_TOP_PADDING } from '../../constants/signupLayout';
 import {
   AGREEMENT_ITEMS,
   REQUIRED_AGREEMENT_KEYS,
   type AgreementDetailKey,
   type AgreementKey,
 } from '../../constants/signupAgreements';
+import SignupStepHeader from './SignupStepHeader';
 
 interface SignupAgreeProps {
   agreements: Record<AgreementKey, boolean>;
@@ -14,7 +16,7 @@ interface SignupAgreeProps {
   onToggleAll: () => void;
   onOpenDetail: (key: AgreementDetailKey) => void;
   onNext: () => void;
-  onClose: () => void;
+  onBack: () => void;
 }
 
 function AgreementCheck({ checked, size = 'sm' }: { checked: boolean; size?: 'sm' | 'lg' }) {
@@ -63,48 +65,15 @@ export default function SignupAgree({
   onToggleAll,
   onOpenDetail,
   onNext,
-  onClose,
+  onBack,
 }: SignupAgreeProps) {
   const allRequiredChecked = REQUIRED_AGREEMENT_KEYS.every((key) => agreements[key]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
-      <header
-        className="relative flex items-center justify-center"
-        style={{ padding: '38px 20px 28px' }}
-      >
-        <h1
-          style={{
-            color: colors.text.dark,
-            fontSize: 24,
-            fontWeight: 800,
-            lineHeight: '32px',
-          }}
-        >
-          회원가입
-        </h1>
-        <button
-          type="button"
-          aria-label="회원가입 닫기"
-          onClick={onClose}
-          className="absolute right-5 top-[37px] flex items-center justify-center"
-          style={{ width: 38, height: 38 }}
-        >
-          <X size={34} strokeWidth={2.4} color={colors.text.dark} />
-        </button>
-      </header>
+      <SignupStepHeader title="회원가입" activeStep={1} onBack={onBack} />
 
-      <div className="flex gap-3 px-7">
-        {[0, 1, 2].map((index) => (
-          <div
-            key={index}
-            className="h-2 flex-1 rounded-full"
-            style={{ backgroundColor: index === 0 ? colors.primary : colors.white }}
-          />
-        ))}
-      </div>
-
-      <main className="flex-1 px-7" style={{ paddingTop: 58 }}>
+      <main className="flex-1 px-6" style={{ paddingTop: SIGNUP_MAIN_TOP_PADDING }}>
         <section>
           <h2
             style={{

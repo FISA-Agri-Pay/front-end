@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Button from '../Button';
 import { colors } from '../../styles/colors';
+import { SIGNUP_MAIN_TOP_PADDING } from '../../constants/signupLayout';
 import SignupStepHeader from './SignupStepHeader';
 
 interface SignupPhoneCodeProps {
@@ -51,7 +52,7 @@ export default function SignupPhoneCode({
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
       <SignupStepHeader title="휴대폰 인증" activeStep={2} onBack={onBack} />
 
-      <main className="flex-1 px-6" style={{ paddingTop: 64 }}>
+      <main className="flex-1 px-6" style={{ paddingTop: SIGNUP_MAIN_TOP_PADDING }}>
         <h2
           style={{
             color: colors.text.dark,

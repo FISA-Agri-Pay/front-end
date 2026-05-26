@@ -23,7 +23,8 @@ function App() {
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/ass" element={<AssPage />} />
-            <Route path="/signup/agree" element={<SignupPage />} />
+            <Route path="/signup/*" element={<SignupPage />} />
+            <Route path="/signup-account" element={<SignupPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

@@ -1,7 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import SignupAgree from '../components/signup/SignupAgree';
 import SignupAgreementDetail from '../components/signup/SignupAgreementDetail';
+import SignupComplete from '../components/signup/SignupComplete';
+import SignupIdCardCapture from '../components/signup/SignupIdCardCapture';
+import SignupIdCardForm, { type IdCardInfo } from '../components/signup/SignupIdCardForm';
+import SignupIdentityIntro from '../components/signup/SignupIdentityIntro';
+import SignupLoginPassword from '../components/signup/SignupLoginPassword';
+import SignupPaymentPin from '../components/signup/SignupPaymentPin';
 import SignupPhoneCode from '../components/signup/SignupPhoneCode';
 import SignupPhoneInfo, { type PhoneAuthInfo } from '../components/signup/SignupPhoneInfo';
 import SignupPhoneTerms from '../components/signup/SignupPhoneTerms';
@@ -15,7 +21,18 @@ import {
   type PhoneTermKey,
 } from '../constants/signupPhoneTerms';
 
-type SignupStep = 'agree' | 'phone-info' | 'phone-terms' | 'phone-code';
+type SignupStep =
+  | 'agree'
+  | 'phone-info'
+  | 'phone-terms'
+  | 'phone-code'
+  | 'identity-intro'
+  | 'id-card-capture'
+  | 'id-card-form'
+  | 'login-password'
+  | 'payment-pin'
+  | 'payment-pin-confirm'
+  | 'complete';
 type DetailTarget =
   | { type: 'signup'; key: AgreementDetailKey }
   | { type: 'phone'; key: PhoneTermKey };
@@ -26,7 +43,34 @@ type SignupFormData = {
     terms: Record<PhoneTermKey, boolean>;
     code: string;
   };
+  idCard: IdCardInfo;
+  account: {
+    password: string;
+    passwordConfirm: string;
+    paymentPin: string;
+    paymentPinConfirm: string;
+    paymentPinError: string;
+  };
 };
+
+const STEP_PATHS: Record<SignupStep, string> = {
+  agree: '/signup/agree',
+  'phone-info': '/signup/auth',
+  'phone-terms': '/signup/auth/terms',
+  'phone-code': '/signup/auth/code',
+  'identity-intro': '/signup/identity',
+  'id-card-capture': '/signup/id-card',
+  'id-card-form': '/signup/id-card/form',
+  'login-password': '/signup-account',
+  'payment-pin': '/signup/password',
+  'payment-pin-confirm': '/signup/password-confirm',
+  complete: '/signup/complete',
+};
+
+function getStepFromPath(pathname: string): SignupStep {
+  const matchedStep = Object.entries(STEP_PATHS).find(([, path]) => path === pathname)?.[0];
+  return (matchedStep as SignupStep | undefined) ?? 'agree';
+}
 
 const INITIAL_FORM: SignupFormData = {
   agreements: {
@@ -50,13 +94,32 @@ const INITIAL_FORM: SignupFormData = {
     },
     code: '',
   },
+  idCard: {
+    imageName: '',
+    issuedDate: '',
+    address: '',
+    zonecode: '',
+  },
+  account: {
+    password: '',
+    passwordConfirm: '',
+    paymentPin: '',
+    paymentPinConfirm: '',
+    paymentPinError: '',
+  },
 };
 
 export default function SignupPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<SignupStep>('agree');
+  const location = useLocation();
+  const [step, setStep] = useState<SignupStep>(() => getStepFromPath(location.pathname));
   const [formData, setFormData] = useState<SignupFormData>(INITIAL_FORM);
   const [selectedDetail, setSelectedDetail] = useState<DetailTarget | null>(null);
+
+  const goStep = (nextStep: SignupStep) => {
+    setStep(nextStep);
+    navigate(STEP_PATHS[nextStep]);
+  };
 
   const toggleAgreement = (key: AgreementKey) => {
     setFormData((prev) => ({
@@ -158,6 +221,26 @@ export default function SignupPage() {
     }));
   };
 
+  const updateIdCard = (partial: Partial<IdCardInfo>) => {
+    setFormData((prev) => ({
+      ...prev,
+      idCard: {
+        ...prev.idCard,
+        ...partial,
+      },
+    }));
+  };
+
+  const updateAccount = (partial: Partial<SignupFormData['account']>) => {
+    setFormData((prev) => ({
+      ...prev,
+      account: {
+        ...prev.account,
+        ...partial,
+      },
+    }));
+  };
+
   if (selectedDetail) {
     const detail =
       selectedDetail.type === 'signup'
@@ -174,7 +257,7 @@ export default function SignupPage() {
           }
           agreePhoneDetail(selectedDetail.key);
         }}
-        onClose={() => setSelectedDetail(null)}
+        onBack={() => setSelectedDetail(null)}
       />
     );
   }
@@ -187,8 +270,8 @@ export default function SignupPage() {
           onToggle={toggleAgreement}
           onToggleAll={toggleAllAgreements}
           onOpenDetail={(key) => setSelectedDetail({ type: 'signup', key })}
-          onNext={() => setStep('phone-info')}
-          onClose={() => navigate('/login')}
+          onNext={() => goStep('phone-info')}
+          onBack={() => navigate('/login')}
         />
       );
     case 'phone-info':
@@ -196,8 +279,8 @@ export default function SignupPage() {
         <SignupPhoneInfo
           value={formData.phoneAuth}
           onChange={updatePhoneAuth}
-          onNext={() => setStep('phone-terms')}
-          onBack={() => setStep('agree')}
+          onNext={() => goStep('phone-terms')}
+          onBack={() => goStep('agree')}
         />
       );
     case 'phone-terms':
@@ -207,8 +290,8 @@ export default function SignupPage() {
           onToggle={togglePhoneTerm}
           onAgreeAll={agreeAllPhoneTerms}
           onOpenDetail={(key) => setSelectedDetail({ type: 'phone', key })}
-          onNext={() => setStep('phone-code')}
-          onClose={() => setStep('phone-info')}
+          onNext={() => goStep('phone-code')}
+          onBack={() => goStep('phone-info')}
         />
       );
     case 'phone-code':
@@ -217,8 +300,87 @@ export default function SignupPage() {
           code={formData.phoneAuth.code}
           phoneNumber={formData.phoneAuth.phoneNumber}
           onChangeCode={updatePhoneCode}
-          onVerify={() => navigate('/signup/id-card')}
-          onBack={() => setStep('phone-terms')}
+          onVerify={() => goStep('identity-intro')}
+          onBack={() => goStep('phone-terms')}
+        />
+      );
+    case 'identity-intro':
+      return (
+        <SignupIdentityIntro
+          onNext={() => goStep('id-card-capture')}
+          onBack={() => goStep('phone-code')}
+        />
+      );
+    case 'id-card-capture':
+      return (
+        <SignupIdCardCapture
+          imageName={formData.idCard.imageName}
+          onCapture={(file) => updateIdCard({ imageName: file.name })}
+          onNext={() => goStep('id-card-form')}
+          onBack={() => goStep('identity-intro')}
+        />
+      );
+    case 'id-card-form':
+      return (
+        <SignupIdCardForm
+          name={formData.phoneAuth.name}
+          birthDate={formData.phoneAuth.birthDate}
+          residentFirstDigit={formData.phoneAuth.residentFirstDigit}
+          value={formData.idCard}
+          onChange={updateIdCard}
+          onComplete={() => goStep('login-password')}
+          onBack={() => goStep('id-card-capture')}
+        />
+      );
+    case 'login-password':
+      return (
+        <SignupLoginPassword
+          phoneNumber={formData.phoneAuth.phoneNumber}
+          password={formData.account.password}
+          passwordConfirm={formData.account.passwordConfirm}
+          onChange={updateAccount}
+          onNext={() => goStep('payment-pin')}
+          onBack={() => goStep('id-card-form')}
+        />
+      );
+    case 'payment-pin':
+      return (
+        <SignupPaymentPin
+          title="결제에 사용할"
+          description="비밀번호 6자리를 설정해 주세요."
+          pin={formData.account.paymentPin}
+          onChange={(paymentPin) => updateAccount({ paymentPin, paymentPinError: '' })}
+          onComplete={() => goStep('payment-pin-confirm')}
+          onBack={() => goStep('login-password')}
+        />
+      );
+    case 'payment-pin-confirm':
+      return (
+        <SignupPaymentPin
+          title="확인을 위해"
+          description="한 번 더 입력해 주세요."
+          pin={formData.account.paymentPinConfirm}
+          errorMessage={formData.account.paymentPinError}
+          onChange={(paymentPinConfirm) => updateAccount({ paymentPinConfirm, paymentPinError: '' })}
+          onComplete={(paymentPinConfirm) => {
+            if (paymentPinConfirm === formData.account.paymentPin) {
+              goStep('complete');
+              return;
+            }
+
+            updateAccount({
+              paymentPinConfirm: '',
+              paymentPinError: '비밀번호가 일치하지 않습니다. 다시 입력해 주세요.',
+            });
+          }}
+          onBack={() => goStep('payment-pin')}
+        />
+      );
+    case 'complete':
+      return (
+        <SignupComplete
+          onGoHome={() => navigate('/home')}
+          onGoLogin={() => navigate('/login')}
         />
       );
   }
