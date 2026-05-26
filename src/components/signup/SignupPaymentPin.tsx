@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Delete } from 'lucide-react';
 import { colors } from '../../styles/colors';
 import { SIGNUP_MAIN_TOP_PADDING } from '../../constants/signupLayout';
@@ -24,17 +25,34 @@ export default function SignupPaymentPin({
   onComplete,
   onBack,
 }: SignupPaymentPinProps) {
+  const completionTimerRef = useRef<number | null>(null);
+
+  const clearCompletionTimer = () => {
+    if (completionTimerRef.current === null) return;
+    window.clearTimeout(completionTimerRef.current);
+    completionTimerRef.current = null;
+  };
+
+  useEffect(() => {
+    return clearCompletionTimer;
+  }, []);
+
   const appendNumber = (value: string) => {
     if (pin.length >= 6) return;
 
     const next = `${pin}${value}`;
     onChange(next);
     if (next.length === 6) {
-      window.setTimeout(() => onComplete(next), 120);
+      clearCompletionTimer();
+      completionTimerRef.current = window.setTimeout(() => {
+        onComplete(next);
+        completionTimerRef.current = null;
+      }, 120);
     }
   };
 
   const deleteNumber = () => {
+    clearCompletionTimer();
     onChange(pin.slice(0, -1));
   };
 

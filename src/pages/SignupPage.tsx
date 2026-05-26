@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import SignupAgree from '../components/signup/SignupAgree';
 import SignupAgreementDetail from '../components/signup/SignupAgreementDetail';
@@ -181,17 +181,12 @@ const INITIAL_FORM: SignupFormData = {
 export default function SignupPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [step, setStep] = useState<SignupStep>(() => getStepFromPath(location.pathname));
+  const step = getStepFromPath(location.pathname);
   const [formData, setFormData] = useState<SignupFormData>(INITIAL_FORM);
   const [selectedDetail, setSelectedDetail] = useState<DetailTarget | null>(null);
 
-  useEffect(() => {
-    setStep(getStepFromPath(location.pathname));
-    setSelectedDetail(null);
-  }, [location.pathname]);
-
   const goStep = (nextStep: SignupStep) => {
-    setStep(nextStep);
+    setSelectedDetail(null);
     navigate(STEP_PATHS[nextStep]);
   };
 
