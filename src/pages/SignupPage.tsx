@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import SignupAgree from '../components/signup/SignupAgree';
 import SignupAgreementDetail from '../components/signup/SignupAgreementDetail';
 import SignupComplete from '../components/signup/SignupComplete';
@@ -72,6 +72,75 @@ function getStepFromPath(pathname: string): SignupStep {
   return (matchedStep as SignupStep | undefined) ?? 'agree';
 }
 
+function hasCompletedPreviousSteps(step: SignupStep, formData: SignupFormData) {
+  const requiredAgreementsDone =
+    formData.agreements.age &&
+    formData.agreements.service &&
+    formData.agreements.privacy &&
+    formData.agreements.credit;
+  const phoneInfoDone =
+    formData.phoneAuth.phoneNumber.length >= 10 &&
+    formData.phoneAuth.birthDate.length === 6 &&
+    formData.phoneAuth.residentFirstDigit.length === 1 &&
+    formData.phoneAuth.name.trim().length > 1;
+  const phoneTermsDone = Object.values(formData.phoneAuth.terms).every(Boolean);
+  const phoneCodeDone = formData.phoneAuth.code.length === 6;
+  const idCardDone =
+    formData.idCard.issuedDate.length === 8 &&
+    formData.idCard.address.trim().length > 0;
+  const loginPasswordDone =
+    formData.account.password.length >= 8 &&
+    formData.account.password === formData.account.passwordConfirm;
+  const paymentPinDone = formData.account.paymentPin.length === 6;
+
+  switch (step) {
+    case 'agree':
+      return true;
+    case 'phone-info':
+      return requiredAgreementsDone;
+    case 'phone-terms':
+      return requiredAgreementsDone && phoneInfoDone;
+    case 'phone-code':
+      return requiredAgreementsDone && phoneInfoDone && phoneTermsDone;
+    case 'identity-intro':
+    case 'id-card-capture':
+    case 'id-card-form':
+      return requiredAgreementsDone && phoneInfoDone && phoneTermsDone && phoneCodeDone;
+    case 'login-password':
+      return requiredAgreementsDone && phoneInfoDone && phoneTermsDone && phoneCodeDone && idCardDone;
+    case 'payment-pin':
+      return (
+        requiredAgreementsDone &&
+        phoneInfoDone &&
+        phoneTermsDone &&
+        phoneCodeDone &&
+        idCardDone &&
+        loginPasswordDone
+      );
+    case 'payment-pin-confirm':
+      return (
+        requiredAgreementsDone &&
+        phoneInfoDone &&
+        phoneTermsDone &&
+        phoneCodeDone &&
+        idCardDone &&
+        loginPasswordDone &&
+        paymentPinDone
+      );
+    case 'complete':
+      return (
+        requiredAgreementsDone &&
+        phoneInfoDone &&
+        phoneTermsDone &&
+        phoneCodeDone &&
+        idCardDone &&
+        loginPasswordDone &&
+        paymentPinDone &&
+        formData.account.paymentPinConfirm === formData.account.paymentPin
+      );
+  }
+}
+
 const INITIAL_FORM: SignupFormData = {
   agreements: {
     age: true,
@@ -115,6 +184,11 @@ export default function SignupPage() {
   const [step, setStep] = useState<SignupStep>(() => getStepFromPath(location.pathname));
   const [formData, setFormData] = useState<SignupFormData>(INITIAL_FORM);
   const [selectedDetail, setSelectedDetail] = useState<DetailTarget | null>(null);
+
+  useEffect(() => {
+    setStep(getStepFromPath(location.pathname));
+    setSelectedDetail(null);
+  }, [location.pathname]);
 
   const goStep = (nextStep: SignupStep) => {
     setStep(nextStep);
@@ -260,6 +334,10 @@ export default function SignupPage() {
         onBack={() => setSelectedDetail(null)}
       />
     );
+  }
+
+  if (!hasCompletedPreviousSteps(step, formData)) {
+    return <Navigate to={STEP_PATHS.agree} replace />;
   }
 
   switch (step) {
