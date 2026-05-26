@@ -15,7 +15,6 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
       <AssStepHeader title="농지 정보 등록" step={1} onBack={onBack} />
 
-      {/* 안내 문구 */}
       <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 16, marginBottom: 32 }}>
         <h1
           style={{
@@ -30,7 +29,6 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
         </h1>
       </div>
 
-      {/* 폼 영역 */}
       <div className="flex-1" style={{ paddingLeft: 20, paddingRight: 20 }}>
 
         {/* 주소 */}
@@ -42,19 +40,20 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
             주소
           </label>
           <div
-            className="flex items-center rounded-xl bg-white"
+            className="flex items-center rounded-xl bg-white w-full"
             style={{ border: '1px solid #E5E0D2', height: 64, paddingRight: 10 }}
           >
             <input
               type="text"
-              className="flex-1 pl-4 h-full bg-transparent outline-none text-[16px] placeholder:text-[#999999]"
+              className="flex-1 min-w-0 pl-4 h-full bg-transparent outline-none text-[16px] placeholder:text-[#999999]"
               placeholder="주소를 검색해 주세요"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               style={{ color: colors.text.dark }}
             />
             <button
-              className="shrink-0 font-bold text-[14px] rounded-lg"
+              type="button"
+              className="shrink-0 font-bold text-[14px] rounded-lg whitespace-nowrap"
               style={{
                 backgroundColor: colors.primary,
                 color: colors.white,
@@ -77,19 +76,19 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
             경작 면적
           </label>
           <div
-            className="flex items-center rounded-xl"
+            className="flex items-center rounded-xl w-full"
             style={{
               border: `2px solid ${colors.primary}`,
               height: 64,
               backgroundColor: colors.white,
-              paddingLeft: 5,
+              paddingLeft: 16,
               paddingRight: 20,
             }}
           >
             <input
               type="text"
               inputMode="numeric"
-              className="flex-1 text-right text-[22px] font-bold outline-none bg-transparent"
+              className="flex-1 min-w-0 text-right text-[22px] font-bold outline-none bg-transparent"
               placeholder=""
               value={area}
               onChange={(e) => setArea(e.target.value.replace(/[^0-9]/g, ''))}
@@ -105,9 +104,9 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
         </div>
       </div>
 
-      {/* 하단 버튼 */}
       <div style={{ padding: '16px 20px 32px' }}>
         <button
+          type="button"
           onClick={onNext}
           className="w-full font-bold"
           style={{
