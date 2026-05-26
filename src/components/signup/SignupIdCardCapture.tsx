@@ -25,6 +25,7 @@ export default function SignupIdCardCapture({
     const file = event.target.files?.[0];
     if (!file) return;
     onCapture(file);
+    event.currentTarget.value = '';
   };
 
   return (
