@@ -1,10 +1,16 @@
 import { X } from 'lucide-react';
 import Button from '../Button';
 import { colors } from '../../styles/colors';
-import type { AgreementDetail } from '../../constants/signupAgreements';
+
+interface AgreementDetailViewData {
+  title: string;
+  countLabel: string;
+  provider?: 'NICE' | 'KCB';
+  content: string[];
+}
 
 interface SignupAgreementDetailProps {
-  detail: AgreementDetail;
+  detail: AgreementDetailViewData;
   onAgree: () => void;
   onClose: () => void;
 }
@@ -61,8 +67,34 @@ export default function SignupAgreementDetail({
           {detail.countLabel}
         </p>
 
+        {detail.provider && (
+          <div
+            className="mt-6 grid grid-cols-2 border-b"
+            style={{ borderColor: '#E5E0D2' }}
+          >
+            {(['NICE', 'KCB'] as const).map((provider) => {
+              const isActive = provider === detail.provider;
+              return (
+                <div
+                  key={provider}
+                  className="flex items-center justify-center"
+                  style={{
+                    height: 42,
+                    color: isActive ? colors.text.dark : '#A7A296',
+                    borderBottom: isActive ? `1.5px solid ${colors.text.dark}` : '1.5px solid transparent',
+                    fontSize: 16,
+                    fontWeight: 800,
+                  }}
+                >
+                  {provider}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <h2
-          className="mt-5"
+          className={detail.provider ? 'mt-6' : 'mt-5'}
           style={{
             color: colors.text.dark,
             fontSize: 20,
