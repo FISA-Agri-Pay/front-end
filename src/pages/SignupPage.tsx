@@ -143,10 +143,10 @@ function hasCompletedPreviousSteps(step: SignupStep, formData: SignupFormData) {
 
 const INITIAL_FORM: SignupFormData = {
   agreements: {
-    age: true,
-    service: true,
-    privacy: true,
-    credit: true,
+    age: false,
+    service: false,
+    privacy: false,
+    credit: false,
     marketing: false,
   },
   phoneAuth: {
@@ -156,10 +156,10 @@ const INITIAL_FORM: SignupFormData = {
     residentFirstDigit: '',
     name: '',
     terms: {
-      service: true,
-      privacy: true,
-      uniqueId: true,
-      identity: true,
+      service: false,
+      privacy: false,
+      uniqueId: false,
+      identity: false,
     },
     code: '',
   },
