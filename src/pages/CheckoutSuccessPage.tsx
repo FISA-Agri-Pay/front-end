@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Check, MessageCircle } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import Button from '../components/Button';
@@ -17,6 +17,7 @@ export default function CheckoutSuccessPage() {
   const state = location.state as CheckoutLocationState | null;
   const totalAmount = state?.totalAmount ?? 0;
   const remainingLimit = CREDIT_LIMIT - totalAmount;
+  const hasValidPaymentAmount = Number.isFinite(totalAmount) && totalAmount > 0;
 
   const goHome = () => {
     clearCart();
@@ -27,6 +28,10 @@ export default function CheckoutSuccessPage() {
     clearCart();
     navigate('/history');
   };
+
+  if (!hasValidPaymentAmount) {
+    return <Navigate to="/cart" replace />;
+  }
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>

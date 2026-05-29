@@ -54,7 +54,13 @@ export default function PaymentPinSheet({
     <div className="fixed inset-0 z-50 flex justify-center bg-black/55">
       <div className="relative flex min-h-screen w-full max-w-[390px] flex-col justify-end">
         <div className="flex-1" onClick={onClose} aria-hidden="true" />
-        <section className="bg-white pt-6" style={{ borderRadius: '18px 18px 0 0' }}>
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="payment-pin-title"
+          className="bg-white pt-6"
+          style={{ borderRadius: '18px 18px 0 0' }}
+        >
           <div className="relative px-6 pb-9 text-center">
             <button
               type="button"
@@ -65,6 +71,7 @@ export default function PaymentPinSheet({
               <X size={24} color={colors.text.muted} />
             </button>
             <h2
+              id="payment-pin-title"
               className="pt-8 text-[20px] font-extrabold leading-[30px]"
               style={{ color: colors.text.dark }}
             >
