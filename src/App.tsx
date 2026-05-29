@@ -8,6 +8,9 @@ import MyPage from './pages/MyPage';
 import Wallet from './pages/WalletPage';
 import AssPage from './pages/AssPage';
 import SignupPage from './pages/SignupPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
+import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
+            <Route path="/product-detail/:productId" element={<ProductDetailPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/mypage" element={<MyPage />} />
             <Route path="/wallet" element={<Wallet />} />
