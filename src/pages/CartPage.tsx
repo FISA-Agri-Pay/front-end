@@ -16,6 +16,7 @@ export default function CartPage() {
   const items = useCartStore((state) => state.items);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const clearCart = useCartStore((state) => state.clearCart);
   const lines = useMemo(() => selectCartLines(items), [items]);
   const totalAmount = lines.reduce((sum, line) => sum + line.lineTotal, 0);
   const isOverLimit = totalAmount > CREDIT_LIMIT;
@@ -148,7 +149,11 @@ export default function CartPage() {
           pin={pin}
           onChange={setPin}
           onClose={() => setIsPinOpen(false)}
-          onComplete={() => navigate('/checkout-success', { state: { totalAmount } })}
+          onComplete={() => {
+            setIsPinOpen(false);
+            clearCart();
+            navigate('/checkout-success', { state: { totalAmount } });
+          }}
         />
       )}
     </div>
