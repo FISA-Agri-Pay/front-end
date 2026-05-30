@@ -18,6 +18,7 @@ export default function CartPage() {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const lines = useMemo(() => selectCartLines(items), [items]);
   const totalAmount = lines.reduce((sum, line) => sum + line.lineTotal, 0);
+  const isOverLimit = totalAmount > CREDIT_LIMIT;
   const [pin, setPin] = useState('');
   const [isPinOpen, setIsPinOpen] = useState(false);
 
@@ -133,7 +134,11 @@ export default function CartPage() {
           className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 bg-white px-5 py-4"
           style={{ borderTop: '1px solid #E5E0D2' }}
         >
-          <Button onClick={openPin}>총 {totalAmount.toLocaleString()}원 외상으로 결제하기</Button>
+          <Button onClick={openPin} disabled={isOverLimit}>
+            {isOverLimit
+              ? '외상 한도를 초과했습니다'
+              : `총 ${totalAmount.toLocaleString()}원 외상으로 결제하기`}
+          </Button>
         </footer>
       )}
 

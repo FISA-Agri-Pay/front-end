@@ -7,6 +7,8 @@ interface CreditSummaryCardProps {
 
 export default function CreditSummaryCard({ limit, paymentAmount }: CreditSummaryCardProps) {
   const remaining = limit - paymentAmount;
+  const safeRemaining = Math.max(remaining, 0);
+  const isOverLimit = remaining < 0;
 
   return (
     <div
@@ -39,9 +41,18 @@ export default function CreditSummaryCard({ limit, paymentAmount }: CreditSummar
           결제 후 남은 한도
         </span>
         <span className="text-[24px] font-extrabold" style={{ color: colors.primary }}>
-          {remaining.toLocaleString()}원
+          {safeRemaining.toLocaleString()}원
         </span>
       </div>
+      {isOverLimit && (
+        <p
+          role="alert"
+          className="mt-3 rounded-[8px] px-3 py-2 text-[12px] font-bold leading-5"
+          style={{ backgroundColor: '#FFF0EE', color: colors.text.danger }}
+        >
+          외상 한도를 {(paymentAmount - limit).toLocaleString()}원 초과했습니다. 수량을 줄인 뒤 결제해 주세요.
+        </p>
+      )}
     </div>
   );
 }
