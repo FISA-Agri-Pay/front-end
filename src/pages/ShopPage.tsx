@@ -101,9 +101,9 @@ export default function ShopPage() {
                 <button
                   type="button"
                   onClick={() => navigate(`/product-detail/${product.id}`)}
-                  className="flex w-full gap-3 pr-[72px] text-left"
+                  className="flex w-full items-center gap-3 pr-[72px] text-left"
                 >
-                  <div className="w-[96px] shrink-0">
+                  <div className="flex h-[102px] w-[96px] shrink-0 items-center justify-center">
                     <ProductVisual visual={product.visual} />
                   </div>
                   <div className="min-w-0 flex-1 py-1">
