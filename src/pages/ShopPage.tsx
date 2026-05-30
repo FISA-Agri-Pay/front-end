@@ -1,128 +1,146 @@
 import { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
-
-const categories = ['전체', '씨앗', '비료', '농약', '농기구', '기타'];
-
-const allProducts = [
-  { id: 1, name: '유기농 복합비료 20kg', price: 45000, category: '비료', emoji: '🌿', rating: 4.8 },
-  { id: 2, name: '방충망 씨앗 패키지', price: 12000, category: '씨앗', emoji: '🌱', rating: 4.5 },
-  { id: 3, name: '스마트 관개 호스 50m', price: 89000, category: '농기구', emoji: '🚿', rating: 4.7 },
-  { id: 4, name: '친환경 농약 세트', price: 35000, category: '농약', emoji: '🧪', rating: 4.3 },
-  { id: 5, name: '모종 포트 100개', price: 8000, category: '기타', emoji: '🪴', rating: 4.6 },
-  { id: 6, name: '벼 씨앗 1kg', price: 15000, category: '씨앗', emoji: '🌾', rating: 4.9 },
-  { id: 7, name: '질소 비료 10kg', price: 25000, category: '비료', emoji: '🌿', rating: 4.4 },
-  { id: 8, name: '전동 분무기', price: 125000, category: '농기구', emoji: '💧', rating: 4.7 },
-];
+import ProductVisual from '../components/shop/ProductVisual';
+import { colors } from '../styles/colors';
+import { CREDIT_LIMIT, SHOP_CATEGORIES, SHOP_PRODUCTS, type ShopCategory } from '../data/shop';
+import { selectCartLines, useCartStore } from '../stores/cartStore';
 
 export default function ShopPage() {
-  const [selectedCategory, setSelectedCategory] = useState('전체');
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const addItem = useCartStore((state) => state.addItem);
+  const items = useCartStore((state) => state.items);
+  const cartLines = selectCartLines(items);
+  const cartCount = cartLines.reduce((sum, line) => sum + line.quantity, 0);
+  const [selectedCategory, setSelectedCategory] = useState<ShopCategory>('전체');
 
-  const filtered = allProducts.filter((p) => {
-    const matchesCategory =
-      selectedCategory === '전체' || p.category === selectedCategory;
-    const matchesSearch = p.name.includes(searchQuery);
-    return matchesCategory && matchesSearch;
-  });
+  const filtered = SHOP_PRODUCTS.filter(
+    (product) => selectedCategory === '전체' || product.category === selectedCategory,
+  );
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#F4F1EA' }}>
-      {/* 헤더 + 검색 */}
-      <div className="px-5 pt-6 pb-3 bg-white">
-        <h1 className="text-xl font-bold mb-3" style={{ color: '#1D1A14' }}>
-          농자재 상점
-        </h1>
-        <div
-          className="flex items-center gap-2 rounded-xl px-4 py-3"
-          style={{ backgroundColor: '#F4F1EA' }}
-        >
-          <Search size={18} color="#7A7363" />
-          <input
-            type="text"
-            placeholder="농자재 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: '#1D1A14' }}
-          />
-        </div>
-      </div>
-
-      {/* 카테고리 탭 */}
-      <div
-        className="bg-white border-b px-5 pb-3"
-        style={{ borderColor: '#DCE8DA' }}
-      >
-        <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {categories.map((cat) => (
+    <div className="flex min-h-screen flex-col pb-24" style={{ backgroundColor: colors.bg }}>
+      <header className="px-5 pb-3 pt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h1 className="text-[20px] font-extrabold" style={{ color: colors.text.dark }}>
+            농자재 상점
+          </h1>
+          <div className="flex items-center gap-3">
+            <Search size={23} color={colors.text.dark} />
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap"
+              type="button"
+              aria-label="장바구니"
+              className="relative flex h-9 w-9 items-center justify-center"
+              onClick={() => navigate('/cart')}
+            >
+              <ShoppingCart size={23} color={colors.text.dark} />
+              {cartCount > 0 && (
+                <span
+                  className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                  style={{ backgroundColor: colors.text.danger }}
+                >
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+        <div
+          className="flex items-center justify-between rounded-xl px-4"
+          style={{
+            height: 53,
+            backgroundColor: colors.white,
+            border: '1px dashed #E5E0D2',
+          }}
+        >
+          <span className="text-[13px] font-bold" style={{ color: colors.text.muted }}>
+            결제 가능한 외상 한도
+          </span>
+          <span className="text-[20px] font-extrabold" style={{ color: colors.text.dark }}>
+            {CREDIT_LIMIT.toLocaleString()} 원
+          </span>
+        </div>
+      </header>
+
+      <section className="px-5 pb-2">
+        <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {SHOP_CATEGORIES.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => setSelectedCategory(category)}
+              className="h-[34px] shrink-0 rounded-full px-4 text-[13px] font-bold"
               style={
-                selectedCategory === cat
-                  ? { backgroundColor: '#2F5D3A', color: '#ffffff' }
-                  : { backgroundColor: '#DCE8DA', color: '#2F5D3A' }
+                selectedCategory === category
+                  ? { backgroundColor: colors.primary, color: colors.white }
+                  : { backgroundColor: colors.white, color: colors.text.muted, border: '1px solid #DCD6C2' }
               }
             >
-              {cat}
+              {category}
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* 상품 그리드 */}
-      <div className="flex-1 px-4 pt-4 pb-28">
+      <main className="flex-1 px-5 pt-2">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <span className="text-4xl mb-3">🔍</span>
-            <p className="text-sm" style={{ color: '#7A7363' }}>
-              검색 결과가 없습니다
+            <p className="mt-3 text-sm" style={{ color: colors.text.muted }}>
+              상품이 없습니다
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {filtered.map((p) => (
-              <div
-                key={p.id}
-                className="bg-white rounded-2xl p-4"
-                style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}
+          <div className="flex flex-col gap-3">
+            {filtered.map((product) => (
+              <article
+                key={product.id}
+                className="relative rounded-[14px] bg-white p-2"
+                style={{ border: '1px solid #EEE8DA' }}
               >
-                <div
-                  className="w-full h-28 rounded-xl flex items-center justify-center text-4xl mb-3"
-                  style={{ backgroundColor: '#DCE8DA' }}
-                >
-                  {p.emoji}
-                </div>
-                <p className="text-xs mb-0.5" style={{ color: '#7A7363' }}>
-                  {p.category}
-                </p>
-                <p
-                  className="text-sm font-semibold leading-snug mb-2"
-                  style={{ color: '#1D1A14' }}
-                >
-                  {p.name}
-                </p>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-bold" style={{ color: '#2F5D3A' }}>
-                    {p.price.toLocaleString()}원
-                  </p>
-                  <span className="text-xs" style={{ color: '#7A7363' }}>
-                    ⭐ {p.rating}
-                  </span>
-                </div>
                 <button
-                  className="w-full py-2 rounded-xl text-sm font-semibold text-white"
-                  style={{ backgroundColor: '#2F5D3A' }}
+                  type="button"
+                  onClick={() => navigate(`/product-detail/${product.id}`)}
+                  className="flex w-full items-center gap-3 pr-[72px] text-left"
+                >
+                  <div className="flex h-[102px] w-[96px] shrink-0 items-center justify-center">
+                    <ProductVisual visual={product.visual} />
+                  </div>
+                  <div className="min-w-0 flex-1 py-1">
+                    <span
+                      className="inline-flex rounded-[5px] px-2 py-1 text-[10px] font-bold"
+                      style={{ backgroundColor: colors.bg, color: colors.text.muted }}
+                    >
+                      {product.category}
+                    </span>
+                    <p className="mt-1 text-[15px] font-extrabold leading-5" style={{ color: colors.text.dark }}>
+                      {product.name}
+                    </p>
+                    <p className="mt-0.5 text-[12px]" style={{ color: colors.text.muted }}>
+                      {product.tag}
+                    </p>
+                    <p className="text-[18px] font-extrabold" style={{ color: colors.text.dark }}>
+                      {product.price.toLocaleString()}원
+                    </p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="absolute bottom-3 right-3 h-8 rounded-[8px] px-4 text-[12px] font-bold"
+                  style={{
+                    border: `1.5px solid ${colors.primary}`,
+                    color: colors.primary,
+                    backgroundColor: colors.white,
+                  }}
+                  onClick={() => addItem(product.id)}
                 >
                   담기
                 </button>
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       <BottomNav />
     </div>

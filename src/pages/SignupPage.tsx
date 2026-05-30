@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import SignupAgree from '../components/signup/SignupAgree';
 import SignupAgreementDetail from '../components/signup/SignupAgreementDetail';
@@ -36,6 +36,9 @@ type SignupStep =
 type DetailTarget =
   | { type: 'signup'; key: AgreementDetailKey }
   | { type: 'phone'; key: PhoneTermKey };
+type SelectedDetail = DetailTarget & {
+  pathname: string;
+};
 
 type SignupFormData = {
   agreements: Record<AgreementKey, boolean>;
@@ -183,13 +186,11 @@ export default function SignupPage() {
   const location = useLocation();
   const step = getStepFromPath(location.pathname);
   const [formData, setFormData] = useState<SignupFormData>(INITIAL_FORM);
-  const [selectedDetail, setSelectedDetail] = useState<DetailTarget | null>(null);
-
-  useEffect(() => {
-    setSelectedDetail(null);
-  }, [location.pathname]);
+  const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
+  const currentDetail = selectedDetail?.pathname === location.pathname ? selectedDetail : null;
 
   const goStep = (nextStep: SignupStep) => {
+    setSelectedDetail(null);
     navigate(STEP_PATHS[nextStep]);
   };
 
@@ -313,21 +314,21 @@ export default function SignupPage() {
     }));
   };
 
-  if (selectedDetail) {
+  if (currentDetail) {
     const detail =
-      selectedDetail.type === 'signup'
-        ? AGREEMENT_DETAILS[selectedDetail.key]
-        : PHONE_TERM_DETAILS[selectedDetail.key];
+      currentDetail.type === 'signup'
+        ? AGREEMENT_DETAILS[currentDetail.key]
+        : PHONE_TERM_DETAILS[currentDetail.key];
 
     return (
       <SignupAgreementDetail
         detail={detail}
         onAgree={() => {
-          if (selectedDetail.type === 'signup') {
-            agreeDetail(selectedDetail.key);
+          if (currentDetail.type === 'signup') {
+            agreeDetail(currentDetail.key);
             return;
           }
-          agreePhoneDetail(selectedDetail.key);
+          agreePhoneDetail(currentDetail.key);
         }}
         onBack={() => setSelectedDetail(null)}
       />
@@ -345,7 +346,7 @@ export default function SignupPage() {
           agreements={formData.agreements}
           onToggle={toggleAgreement}
           onToggleAll={toggleAllAgreements}
-          onOpenDetail={(key) => setSelectedDetail({ type: 'signup', key })}
+          onOpenDetail={(key) => setSelectedDetail({ type: 'signup', key, pathname: location.pathname })}
           onNext={() => goStep('phone-info')}
           onBack={() => navigate('/login')}
         />
@@ -365,7 +366,7 @@ export default function SignupPage() {
           terms={formData.phoneAuth.terms}
           onToggle={togglePhoneTerm}
           onAgreeAll={agreeAllPhoneTerms}
-          onOpenDetail={(key) => setSelectedDetail({ type: 'phone', key })}
+          onOpenDetail={(key) => setSelectedDetail({ type: 'phone', key, pathname: location.pathname })}
           onNext={() => goStep('phone-code')}
           onBack={() => goStep('phone-info')}
         />
