@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft, ShoppingCart } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import Button from '../components/Button';
 import ProductVisual from '../components/shop/ProductVisual';
@@ -31,7 +32,24 @@ export default function ProductDetailPage() {
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
-      <PageHeader title="" onBack={() => navigate(-1)} />
+      <header className="flex items-center justify-between px-4 pb-2 pt-4">
+        <button
+          type="button"
+          aria-label="뒤로가기"
+          onClick={() => navigate(-1)}
+          className="flex h-9 w-9 items-center justify-center"
+        >
+          <ChevronLeft size={24} strokeWidth={2.2} color={colors.text.dark} />
+        </button>
+        <button
+          type="button"
+          aria-label="장바구니"
+          onClick={() => navigate('/cart')}
+          className="flex h-9 w-9 items-center justify-center"
+        >
+          <ShoppingCart size={23} strokeWidth={2.1} color={colors.text.dark} />
+        </button>
+      </header>
 
       <ProductVisual visual={product.visual} size="lg" />
 

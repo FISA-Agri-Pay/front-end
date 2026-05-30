@@ -19,25 +19,25 @@ export default function ProductVisual({ visual, size = 'sm' }: ProductVisualProp
 
   return (
     <div
-      className="flex items-center justify-center"
+      className="flex shrink-0 items-center justify-center overflow-hidden"
       style={{
         width: '100%',
-        height: isLarge ? 174 : 92,
+        height: isLarge ? 210 : 92,
         borderRadius: isLarge ? 0 : 8,
         background: bg,
       }}
     >
       <div
-        className="flex items-center justify-center"
+        className="flex shrink-0 items-center justify-center"
         style={{
-          width: isLarge ? 106 : 48,
-          height: isLarge ? 126 : 48,
+          width: isLarge ? 132 : 48,
+          height: isLarge ? 156 : 48,
           borderRadius: isLarge ? 18 : 14,
           backgroundColor: isLarge ? '#C9BA74' : 'transparent',
           boxShadow: isLarge ? 'inset 0 -18px 24px rgba(65, 53, 24, 0.18)' : undefined,
         }}
       >
-        <Icon size={isLarge ? 58 : 32} color={isLarge ? colors.white : fg} strokeWidth={1.8} />
+        <Icon size={isLarge ? 72 : 32} color={isLarge ? colors.white : fg} strokeWidth={1.8} />
       </div>
     </div>
   );
