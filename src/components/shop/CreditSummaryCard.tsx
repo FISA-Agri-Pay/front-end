@@ -1,0 +1,58 @@
+import { colors } from '../../styles/colors';
+
+interface CreditSummaryCardProps {
+  limit: number;
+  paymentAmount: number;
+}
+
+export default function CreditSummaryCard({ limit, paymentAmount }: CreditSummaryCardProps) {
+  const remaining = limit - paymentAmount;
+  const safeRemaining = Math.max(remaining, 0);
+  const isOverLimit = remaining < 0;
+
+  return (
+    <div
+      style={{
+        backgroundColor: colors.white,
+        border: '1px solid #E5E0D2',
+        borderRadius: 14,
+        padding: '16px 16px 14px',
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-bold" style={{ color: colors.text.muted }}>
+          현재 남은 외상 한도
+        </span>
+        <span className="text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
+          {limit.toLocaleString()}원
+        </span>
+      </div>
+      <div className="my-3 border-t border-dashed" style={{ borderColor: '#E5E0D2' }} />
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-bold" style={{ color: colors.text.danger }}>
+          총 주문 금액
+        </span>
+        <span className="text-[17px] font-extrabold" style={{ color: colors.text.danger }}>
+          - {paymentAmount.toLocaleString()}원
+        </span>
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-[15px] font-extrabold" style={{ color: colors.primary }}>
+          결제 후 남은 한도
+        </span>
+        <span className="text-[24px] font-extrabold" style={{ color: colors.primary }}>
+          {safeRemaining.toLocaleString()}원
+        </span>
+      </div>
+      {isOverLimit && (
+        <p
+          role="alert"
+          className="mt-3 rounded-[8px] px-3 py-2 text-[12px] font-bold leading-5"
+          style={{ backgroundColor: '#FFF0EE', color: colors.text.danger }}
+        >
+          외상 한도를 {(paymentAmount - limit).toLocaleString()}원 초과했습니다. 수량을 줄인 뒤 결제해 주세요.
+        </p>
+      )}
+    </div>
+  );
+}
