@@ -1,15 +1,70 @@
-import { useState } from 'react';
 import AssStepHeader from './AssStepHeader';
 import { colors } from '../../styles/colors';
 
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: {
+        oncomplete: (data: { address: string; zonecode: string }) => void;
+      }) => { open: () => void };
+    };
+  }
+}
+
+const POSTCODE_SCRIPT_ID = 'daum-postcode-script';
+
+function openPostcode(onComplete: (address: string) => void) {
+  const open = () => {
+    if (!window.daum?.Postcode) return;
+    new window.daum.Postcode({
+      oncomplete: (data) => onComplete(data.address),
+    }).open();
+  };
+
+  const cleanupFailedScript = (
+    script: HTMLElement,
+    onLoad?: () => void,
+    onError?: () => void,
+  ) => {
+    if (onLoad) script.removeEventListener('load', onLoad);
+    if (onError) script.removeEventListener('error', onError);
+    script.remove();
+  };
+
+  if (window.daum?.Postcode) {
+    open();
+    return;
+  }
+
+  const existingScript = document.getElementById(POSTCODE_SCRIPT_ID);
+  if (existingScript) {
+    const handleExistingError = () =>
+      cleanupFailedScript(existingScript, open, handleExistingError);
+    existingScript.addEventListener('load', open, { once: true });
+    existingScript.addEventListener('error', handleExistingError, { once: true });
+    return;
+  }
+
+  const script = document.createElement('script');
+  const handleError = () => cleanupFailedScript(script, open, handleError);
+  script.id = POSTCODE_SCRIPT_ID;
+  script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+  script.async = true;
+  script.addEventListener('load', open, { once: true });
+  script.addEventListener('error', handleError, { once: true });
+  document.body.appendChild(script);
+}
+
 interface AssFarmInfoProps {
+  address: string;
+  area: string;
+  onUpdate: (partial: { address?: string; area?: string }) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
-export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
-  const [address, setAddress] = useState('');
-  const [area, setArea] = useState('');
+export default function AssFarmInfo({ address, area, onUpdate, onNext, onBack }: AssFarmInfoProps) {
+  const handleSearch = () => openPostcode((selected) => onUpdate({ address: selected }));
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
@@ -30,7 +85,6 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
       </div>
 
       <div className="flex-1" style={{ paddingLeft: 20, paddingRight: 20 }}>
-
         {/* 주소 */}
         <div className="mb-6">
           <label
@@ -45,14 +99,16 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
           >
             <input
               type="text"
-              className="flex-1 min-w-0 pl-4 h-full bg-transparent outline-none text-[16px] placeholder:text-[#999999]"
+              readOnly
+              className="flex-1 min-w-0 pl-4 h-full bg-transparent outline-none text-[16px] placeholder:text-[#999999] cursor-pointer"
               placeholder="주소를 검색해 주세요"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onClick={handleSearch}
               style={{ color: colors.text.dark }}
             />
             <button
               type="button"
+              onClick={handleSearch}
               className="shrink-0 font-bold text-[14px] rounded-lg whitespace-nowrap"
               style={{
                 backgroundColor: colors.primary,
@@ -91,7 +147,7 @@ export default function AssFarmInfo({ onNext, onBack }: AssFarmInfoProps) {
               className="flex-1 min-w-0 text-right text-[22px] font-bold outline-none bg-transparent"
               placeholder=""
               value={area}
-              onChange={(e) => setArea(e.target.value.replace(/[^0-9]/g, ''))}
+              onChange={(e) => onUpdate({ area: e.target.value.replace(/[^0-9]/g, '') })}
               style={{ color: colors.text.dark }}
             />
             <span

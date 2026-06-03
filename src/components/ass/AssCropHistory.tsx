@@ -25,12 +25,18 @@ const CROPS = [
 ];
 
 interface AssCropHistoryProps {
+  onUpdate?: (crop: string) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
-export default function AssCropHistory({ onNext, onBack }: AssCropHistoryProps) {
+export default function AssCropHistory({ onUpdate, onNext, onBack }: AssCropHistoryProps) {
   const [selected, setSelected] = useState<string | null>(null);
+
+  const handleSelect = (id: string) => {
+    setSelected(id);
+    onUpdate?.(id);
+  };
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
@@ -59,7 +65,7 @@ export default function AssCropHistory({ onNext, onBack }: AssCropHistoryProps) 
             return (
               <button
                 key={id}
-                onClick={() => setSelected(id)}
+                onClick={() => handleSelect(id)}
                 className="flex flex-col items-center justify-center rounded-xl"
                 style={{
                   height: 100,
