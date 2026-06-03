@@ -1,8 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import { Camera, CheckCircle } from 'lucide-react';
 import AssStepHeader from './AssStepHeader';
 import { colors } from '../../styles/colors';
+
+export interface DocFile {
+  file: File;
+  previewUrl: string;
+}
 
 interface FormSnapshot {
   address: string;
@@ -12,14 +17,11 @@ interface FormSnapshot {
 }
 
 interface AssDocumentsProps {
+  docs: Record<string, DocFile | null>;
+  onDocUpdate: (id: string, docFile: DocFile | null) => void;
   formSnapshot: FormSnapshot;
   onNext: () => void;
   onBack: () => void;
-}
-
-interface DocFile {
-  file: File;
-  previewUrl: string;
 }
 
 const DOCUMENTS = [
@@ -27,43 +29,30 @@ const DOCUMENTS = [
   { id: 'cropInsurance', label: '농작물 재해보험 가입 증명서', required: false },
 ];
 
-export default function AssDocuments({ formSnapshot, onNext, onBack }: AssDocumentsProps) {
-  const [files, setFiles] = useState<Record<string, DocFile | null>>({
-    farmReg: null,
-    cropInsurance: null,
-  });
+export default function AssDocuments({ docs, onDocUpdate, formSnapshot, onNext, onBack }: AssDocumentsProps) {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-
-  // 최신 files를 ref에 유지하여 unmount 시 URL 정리
-  const filesRef = useRef(files);
-  useEffect(() => { filesRef.current = files; }, [files]);
-  useEffect(() => {
-    return () => {
-      Object.values(filesRef.current).forEach((f) => {
-        if (f) URL.revokeObjectURL(f.previewUrl);
-      });
-    };
-  }, []);
 
   const handleFileChange = (id: string, e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFiles((prev) => {
-      if (prev[id]) URL.revokeObjectURL(prev[id]!.previewUrl);
-      return { ...prev, [id]: { file, previewUrl: URL.createObjectURL(file) } };
-    });
+    onDocUpdate(id, { file, previewUrl: URL.createObjectURL(file) });
     e.currentTarget.value = '';
   };
 
+  const isFarmRegAttached = !!docs.farmReg;
+
   const handleSubmit = () => {
-    console.log('ASS 심사 신청 데이터:', {
-      address: formSnapshot.address,
-      area: formSnapshot.area,
-      crop: formSnapshot.crop,
-      hasInsurance: formSnapshot.hasInsurance,
-      farmRegDoc: files.farmReg?.file ?? null,
-      cropInsuranceDoc: files.cropInsurance?.file ?? null,
-    });
+    if (!isFarmRegAttached) return;
+    if (import.meta.env.DEV) {
+      console.log('ASS 심사 신청 데이터:', {
+        address: formSnapshot.address,
+        area: formSnapshot.area,
+        crop: formSnapshot.crop,
+        hasInsurance: formSnapshot.hasInsurance,
+        farmRegDoc: docs.farmReg?.file ?? null,
+        cropInsuranceDoc: docs.cropInsurance?.file ?? null,
+      });
+    }
     onNext();
   };
 
@@ -87,7 +76,7 @@ export default function AssDocuments({ formSnapshot, onNext, onBack }: AssDocume
 
       <div className="flex-1 flex flex-col gap-5" style={{ paddingLeft: 20, paddingRight: 20 }}>
         {DOCUMENTS.map(({ id, label, required }) => {
-          const docFile = files[id];
+          const docFile = docs[id];
           const isDone = !!docFile;
 
           return (
@@ -100,7 +89,6 @@ export default function AssDocuments({ formSnapshot, onNext, onBack }: AssDocume
                 padding: '16px',
               }}
             >
-              {/* 서류명 + 필수 뱃지 */}
               <div className="flex items-center justify-between mb-3">
                 <span className="font-bold text-[16px]" style={{ color: colors.text.dark }}>
                   {label}
@@ -120,7 +108,6 @@ export default function AssDocuments({ formSnapshot, onNext, onBack }: AssDocume
                 )}
               </div>
 
-              {/* 숨김 파일 입력 */}
               <input
                 ref={(el) => { inputRefs.current[id] = el; }}
                 type="file"
@@ -130,7 +117,6 @@ export default function AssDocuments({ formSnapshot, onNext, onBack }: AssDocume
                 onChange={(e) => handleFileChange(id, e)}
               />
 
-              {/* 첨부 영역 */}
               <button
                 type="button"
                 onClick={() => inputRefs.current[id]?.click()}
@@ -179,11 +165,12 @@ export default function AssDocuments({ formSnapshot, onNext, onBack }: AssDocume
         <button
           type="button"
           onClick={handleSubmit}
+          disabled={!isFarmRegAttached}
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
-            backgroundColor: colors.primary,
+            backgroundColor: isFarmRegAttached ? colors.primary : '#CCCCCC',
             color: colors.white,
             fontSize: 18,
           }}

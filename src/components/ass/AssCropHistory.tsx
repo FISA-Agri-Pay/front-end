@@ -25,13 +25,14 @@ const CROPS = [
 ];
 
 interface AssCropHistoryProps {
+  crop?: string;
   onUpdate?: (crop: string) => void;
   onNext: () => void;
   onBack: () => void;
 }
 
-export default function AssCropHistory({ onUpdate, onNext, onBack }: AssCropHistoryProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+export default function AssCropHistory({ crop, onUpdate, onNext, onBack }: AssCropHistoryProps) {
+  const [selected, setSelected] = useState<string | null>(crop || null);
 
   const handleSelect = (id: string) => {
     setSelected(id);

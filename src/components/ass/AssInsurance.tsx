@@ -3,6 +3,7 @@ import AssStepHeader from './AssStepHeader';
 import { colors } from '../../styles/colors';
 
 interface AssInsuranceProps {
+  hasInsurance?: boolean | null;
   onUpdate?: (hasInsurance: boolean) => void;
   onNext: () => void;
   onBack: () => void;
@@ -13,8 +14,13 @@ const OPTIONS = [
   { id: false, label: '아니요, 안 했어요' },
 ];
 
-export default function AssInsurance({ onUpdate, onNext, onBack }: AssInsuranceProps) {
-  const [hasInsurance, setHasInsurance] = useState<boolean | null>(null);
+export default function AssInsurance({
+  hasInsurance: initialHasInsurance,
+  onUpdate,
+  onNext,
+  onBack,
+}: AssInsuranceProps) {
+  const [hasInsurance, setHasInsurance] = useState<boolean | null>(initialHasInsurance ?? null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleSelect = (value: boolean) => {

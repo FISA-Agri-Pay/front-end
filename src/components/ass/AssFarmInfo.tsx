@@ -13,46 +13,40 @@ declare global {
 
 const POSTCODE_SCRIPT_ID = 'daum-postcode-script';
 
-function openPostcode(onComplete: (address: string) => void) {
-  const open = () => {
-    if (!window.daum?.Postcode) return;
-    new window.daum.Postcode({
-      oncomplete: (data) => onComplete(data.address),
-    }).open();
-  };
+// 모듈 단위 Promise로 중복 로드 방지 — script.addEventListener를 여러 번 붙이지 않음
+let postcodeScriptPromise: Promise<void> | null = null;
 
-  const cleanupFailedScript = (
-    script: HTMLElement,
-    onLoad?: () => void,
-    onError?: () => void,
-  ) => {
-    if (onLoad) script.removeEventListener('load', onLoad);
-    if (onError) script.removeEventListener('error', onError);
-    script.remove();
+function openPostcode(onComplete: (address: string) => void) {
+  const launch = () => {
+    if (!window.daum?.Postcode) return;
+    new window.daum.Postcode({ oncomplete: (data) => onComplete(data.address) }).open();
   };
 
   if (window.daum?.Postcode) {
-    open();
+    launch();
     return;
   }
 
-  const existingScript = document.getElementById(POSTCODE_SCRIPT_ID);
-  if (existingScript) {
-    const handleExistingError = () =>
-      cleanupFailedScript(existingScript, open, handleExistingError);
-    existingScript.addEventListener('load', open, { once: true });
-    existingScript.addEventListener('error', handleExistingError, { once: true });
-    return;
+  if (!postcodeScriptPromise) {
+    postcodeScriptPromise = new Promise<void>((resolve, reject) => {
+      let script = document.getElementById(POSTCODE_SCRIPT_ID) as HTMLScriptElement | null;
+      if (!script) {
+        script = document.createElement('script');
+        script.id = POSTCODE_SCRIPT_ID;
+        script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+        script.async = true;
+        document.body.appendChild(script);
+      }
+      script.addEventListener('load', () => resolve(), { once: true });
+      script.addEventListener('error', () => {
+        script!.remove();
+        postcodeScriptPromise = null;
+        reject();
+      }, { once: true });
+    });
   }
 
-  const script = document.createElement('script');
-  const handleError = () => cleanupFailedScript(script, open, handleError);
-  script.id = POSTCODE_SCRIPT_ID;
-  script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-  script.async = true;
-  script.addEventListener('load', open, { once: true });
-  script.addEventListener('error', handleError, { once: true });
-  document.body.appendChild(script);
+  postcodeScriptPromise.then(launch).catch(() => {});
 }
 
 interface AssFarmInfoProps {
