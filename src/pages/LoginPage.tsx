@@ -4,14 +4,13 @@ import { ChevronLeft } from 'lucide-react';
 import axios from 'axios';
 import kkppImg from '../assets/app_logo_main.png';
 import { colors } from '../styles/colors';
-import { AUTH_BASE_URL } from '../api/config';
+import client from '../api/client';
 import { tokenStorage } from '../api/tokenStorage';
 
 interface LoginResponse {
   status: string;
   data: {
     accessToken: string;
-    refreshToken: string;
     tokenType: string;
     expiresIn: number;
     isPinSet: boolean;
@@ -31,13 +30,13 @@ export default function LoginPage() {
     setErrorMsg('');
     setLoading(true);
     try {
-      const { data: res } = await axios.post<LoginResponse>(
-        `${AUTH_BASE_URL}/api/v1/auth/login`,
+      const { data: res } = await client.post<LoginResponse>(
+        '/api/v1/auth/login',
         { phone, password },
       );
 
       if (res.status === 'SUCCESS' && res.data) {
-        tokenStorage.set(res.data.accessToken, res.data.refreshToken);
+        tokenStorage.set(res.data.accessToken);
         navigate('/home');
       } else {
         setErrorMsg(res.message ?? '로그인에 실패했습니다.');
