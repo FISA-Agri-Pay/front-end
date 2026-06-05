@@ -15,35 +15,45 @@ import garlicGray  from '../../assets/crops/garlic-gray.png';
 import etcGreen    from '../../assets/crops/etc-plus-green.png';
 import etcGray     from '../../assets/crops/etc-plus-gray.png';
 
-const CROPS = [
-  { id: '벼(쌀)', label: '벼 (쌀)', green: riceGreen,   gray: riceGray   },
-  { id: '콩',    label: '콩',       green: beanGreen,   gray: beanGray   },
-  { id: '고추',  label: '고추',     green: pepperGreen, gray: pepperGray },
-  { id: '양파',  label: '양파',     green: onionGreen,  gray: onionGray  },
-  { id: '마늘',  label: '마늘',     green: garlicGreen, gray: garlicGray },
-  { id: '기타',  label: '기타',     green: etcGreen,    gray: etcGray    },
+export type CropCode = 'RICE' | 'BEAN' | 'PEPPER' | 'ONION' | 'GARLIC' | 'CUSTOM';
+
+const CROP_CODES = new Set<CropCode>(['RICE', 'BEAN', 'PEPPER', 'ONION', 'GARLIC', 'CUSTOM']);
+
+const CROPS: { code: CropCode; label: string; green: string; gray: string }[] = [
+  { code: 'RICE',   label: '벼 (쌀)', green: riceGreen,   gray: riceGray   },
+  { code: 'BEAN',   label: '콩',      green: beanGreen,   gray: beanGray   },
+  { code: 'PEPPER', label: '고추',    green: pepperGreen, gray: pepperGray },
+  { code: 'ONION',  label: '양파',    green: onionGreen,  gray: onionGray  },
+  { code: 'GARLIC', label: '마늘',    green: garlicGreen, gray: garlicGray },
+  { code: 'CUSTOM', label: '기타',    green: etcGreen,    gray: etcGray    },
 ];
 
 interface AssCropHistoryProps {
   crop?: string;
-  onUpdate?: (crop: string) => void;
+  onUpdate?: (crop: CropCode) => void;
   onNext: () => void;
   onBack: () => void;
+  loading?: boolean;
+  errorMsg?: string;
 }
 
-export default function AssCropHistory({ crop, onUpdate, onNext, onBack }: AssCropHistoryProps) {
-  const [selected, setSelected] = useState<string | null>(crop || null);
+function toCropCode(value: string | undefined): CropCode | null {
+  if (value && CROP_CODES.has(value as CropCode)) return value as CropCode;
+  return null;
+}
 
-  const handleSelect = (id: string) => {
-    setSelected(id);
-    onUpdate?.(id);
+export default function AssCropHistory({ crop, onUpdate, onNext, onBack, loading, errorMsg }: AssCropHistoryProps) {
+  const [selected, setSelected] = useState<CropCode | null>(toCropCode(crop));
+
+  const handleSelect = (code: CropCode) => {
+    setSelected(code);
+    onUpdate?.(code);
   };
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
       <AssStepHeader title="재배 작물 이력" step={2} onBack={onBack} />
 
-      {/* 안내 문구 */}
       <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 16, marginBottom: 24 }}>
         <h1
           style={{
@@ -58,15 +68,15 @@ export default function AssCropHistory({ crop, onUpdate, onNext, onBack }: AssCr
         </h1>
       </div>
 
-      {/* 작물 선택 그리드 */}
       <div className="flex-1" style={{ paddingLeft: 20, paddingRight: 20 }}>
         <div className="grid grid-cols-2 gap-3">
-          {CROPS.map(({ id, label, green, gray }) => {
-            const isSelected = selected === id;
+          {CROPS.map(({ code, label, green, gray }) => {
+            const isSelected = selected === code;
             return (
               <button
-                key={id}
-                onClick={() => handleSelect(id)}
+                key={code}
+                type="button"
+                onClick={() => handleSelect(code)}
                 className="flex flex-col items-center justify-center rounded-xl"
                 style={{
                   height: 100,
@@ -96,20 +106,27 @@ export default function AssCropHistory({ crop, onUpdate, onNext, onBack }: AssCr
         </div>
       </div>
 
-      {/* 하단 버튼 */}
       <div style={{ padding: '16px 20px 32px' }}>
+        {errorMsg && (
+          <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
+            {errorMsg}
+          </p>
+        )}
         <button
+          type="button"
           onClick={onNext}
+          disabled={loading}
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
-            backgroundColor: colors.primary,
+            backgroundColor: loading ? '#AAAAAA' : colors.primary,
             color: colors.white,
             fontSize: 18,
+            cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          다음으로
+          {loading ? '처리 중…' : '다음으로'}
         </button>
       </div>
     </div>

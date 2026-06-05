@@ -7,6 +7,8 @@ interface AssInsuranceProps {
   onUpdate?: (hasInsurance: boolean) => void;
   onNext: () => void;
   onBack: () => void;
+  loading?: boolean;
+  errorMsg?: string;
 }
 
 const OPTIONS = [
@@ -19,6 +21,8 @@ export default function AssInsurance({
   onUpdate,
   onNext,
   onBack,
+  loading,
+  errorMsg,
 }: AssInsuranceProps) {
   const [hasInsurance, setHasInsurance] = useState<boolean | null>(initialHasInsurance ?? null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -128,19 +132,26 @@ export default function AssInsurance({
       </div>
 
       <div style={{ padding: '16px 20px 32px' }}>
+        {errorMsg && (
+          <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
+            {errorMsg}
+          </p>
+        )}
         <button
           type="button"
           onClick={onNext}
+          disabled={loading}
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
-            backgroundColor: colors.primary,
+            backgroundColor: loading ? '#AAAAAA' : colors.primary,
             color: colors.white,
             fontSize: 18,
+            cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          다음으로
+          {loading ? '처리 중…' : '다음으로'}
         </button>
       </div>
     </div>

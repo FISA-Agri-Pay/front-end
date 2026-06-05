@@ -55,9 +55,11 @@ interface AssFarmInfoProps {
   onUpdate: (partial: { address?: string; area?: string }) => void;
   onNext: () => void;
   onBack: () => void;
+  loading?: boolean;
+  errorMsg?: string;
 }
 
-export default function AssFarmInfo({ address, area, onUpdate, onNext, onBack }: AssFarmInfoProps) {
+export default function AssFarmInfo({ address, area, onUpdate, onNext, onBack, loading, errorMsg }: AssFarmInfoProps) {
   const handleSearch = () => openPostcode((selected) => onUpdate({ address: selected }));
 
   return (
@@ -155,19 +157,26 @@ export default function AssFarmInfo({ address, area, onUpdate, onNext, onBack }:
       </div>
 
       <div style={{ padding: '16px 20px 32px' }}>
+        {errorMsg && (
+          <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
+            {errorMsg}
+          </p>
+        )}
         <button
           type="button"
           onClick={onNext}
+          disabled={loading}
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
-            backgroundColor: colors.primary,
+            backgroundColor: loading ? '#AAAAAA' : colors.primary,
             color: colors.white,
             fontSize: 18,
+            cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          다음으로
+          {loading ? '처리 중…' : '다음으로'}
         </button>
       </div>
     </div>

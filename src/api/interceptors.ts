@@ -9,7 +9,6 @@ interface RefreshApiResponse {
   status: string;
   data: {
     accessToken: string;
-    refreshToken: string;
   } | null;
   errorCode?: string;
   message?: string;
@@ -76,28 +75,17 @@ export function applyInterceptors(instance: AxiosInstance): void {
       config._retry = true;
       isRefreshing  = true;
 
-      // refreshToken 없으면 즉시 로그아웃
-      const refreshToken = tokenStorage.getRefresh();
-      if (!refreshToken) {
-        isRefreshing = false;
-        const noTokenErr = new Error('No refresh token');
-        processQueue(noTokenErr, null);
-        tokenStorage.clear();
-        window.location.replace('/login');
-        return Promise.reject(noTokenErr);
-      }
-
       try {
-        // 인터셉터 루프 방지: raw axios + timeout
+        // refreshToken은 HttpOnly 쿠키로 자동 전송 — body 없이 호출
         const { data } = await axios.post<RefreshApiResponse>(
           `${AUTH_BASE_URL}/api/v1/auth/refresh`,
-          { refreshToken },
-          { timeout: 5000 },
+          undefined,
+          { timeout: 5000, withCredentials: true },
         );
 
         if (!data.data) throw new Error('Empty refresh response');
 
-        tokenStorage.set(data.data.accessToken, data.data.refreshToken);
+        tokenStorage.set(data.data.accessToken);
         processQueue(null, data.data.accessToken);
         config.headers.set('Authorization', `Bearer ${data.data.accessToken}`);
         return instance(config);
