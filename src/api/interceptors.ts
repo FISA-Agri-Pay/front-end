@@ -64,6 +64,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
 
       // refresh 진행 중이면 큐에 대기 후 새 토큰으로 재시도
       if (isRefreshing) {
+        config._retry = true;
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then((newToken) => {
