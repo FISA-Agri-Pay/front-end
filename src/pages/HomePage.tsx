@@ -40,10 +40,28 @@ function toCreditStatus(credit: WalletCredit): CreditStatus {
   return 'before';
 }
 
+function CreditCardSkeleton() {
+  return (
+    <div
+      style={{
+        backgroundColor: colors.white,
+        border: '2px solid #E5E0D2',
+        borderRadius: 12,
+        padding: '20px 20px 16px',
+        height: 130,
+      }}
+    >
+      <div style={{ height: 16, width: '60%', backgroundColor: '#E5E0D2', borderRadius: 6, marginBottom: 12 }} />
+      <div style={{ height: 14, width: '80%', backgroundColor: '#EDEBE6', borderRadius: 6, marginBottom: 8 }} />
+      <div style={{ height: 14, width: '50%', backgroundColor: '#EDEBE6', borderRadius: 6 }} />
+    </div>
+  );
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
 
-  const [creditStatus, setCreditStatus] = useState<CreditStatus>('before');
+  const [creditStatus, setCreditStatus] = useState<CreditStatus | null>(null);
   const [creditLimit, setCreditLimit] = useState(0);
   const [creditUsed, setCreditUsed] = useState(0);
   const userName = '김농부';
@@ -55,7 +73,7 @@ export default function HomePage() {
         setCreditLimit(credit.totalLimit);
         setCreditUsed(credit.usedAmount);
       })
-      .catch(() => {});
+      .catch(() => { setCreditStatus('before'); });
   }, []);
 
   return (
@@ -82,7 +100,10 @@ export default function HomePage() {
 
       {/* 외상 한도 카드 */}
       <div style={{ margin: '14px 20px 0' }}>
-        <CreditLimitCard status={creditStatus} userName={userName} limit={creditLimit} used={creditUsed} />
+        {creditStatus === null
+          ? <CreditCardSkeleton />
+          : <CreditLimitCard status={creditStatus} userName={userName} limit={creditLimit} used={creditUsed} />
+        }
       </div>
 
       {/* 추천 기자재 타이틀 */}
