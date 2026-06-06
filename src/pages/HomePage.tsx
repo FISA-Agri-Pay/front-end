@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, ChevronRight, Truck } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { colors } from '../styles/colors';
 import logoImg from '../assets/app_logo_title.png';
 import CreditLimitCard, { type CreditStatus } from '../components/CreditLimitCard';
+import { getWalletCredit } from '../api/wallet';
+import type { WalletCredit } from '../types/wallet';
 
 type Product = {
   id: number;
@@ -29,13 +31,32 @@ const deliveries: Delivery[] = [
   { id: 1, itemName: '복합 비료 20kg', status: '배송 중' },
 ];
 
+function toCreditStatus(credit: WalletCredit): CreditStatus {
+  if (credit.hasActiveLimit) return 'completed';
+  const app = credit.applicationStatus;
+  if (app === null) return 'before';
+  if (app === 'REQUESTED' || app === 'PENDING' || app === 'APPROVED') return 'processing';
+  if (app === 'REJECTED' || app === 'CANCELLED') return 'rejected';
+  return 'before';
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
 
-  const [creditStatus] = useState<CreditStatus>('completed');
+  const [creditStatus, setCreditStatus] = useState<CreditStatus>('before');
+  const [creditLimit, setCreditLimit] = useState(0);
+  const [creditUsed, setCreditUsed] = useState(0);
   const userName = '김농부';
-  const creditLimit = 4000000;
-  const creditUsed = 2500000;
+
+  useEffect(() => {
+    getWalletCredit()
+      .then((credit) => {
+        setCreditStatus(toCreditStatus(credit));
+        setCreditLimit(credit.totalLimit);
+        setCreditUsed(credit.usedAmount);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
