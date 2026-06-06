@@ -13,11 +13,7 @@ import {
   useSaveInsurance,
   useSubmitCredit,
 } from '../hooks/useCreditFlow';
-<<<<<<< Updated upstream
-import type { ApiResponse, RequiredDocument } from '../types/credit';
-=======
 import type { ApiResponse, CropCode, RequiredDocument } from '../types/credit';
->>>>>>> Stashed changes
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
@@ -113,11 +109,7 @@ export default function AssPage() {
   };
 
   const handleCropNext = async () => {
-<<<<<<< Updated upstream
-    if (!sessionId) return;
-=======
-    if (!sessionId || !formData.crop) return; // Task 3: 빈 문자열 방어
->>>>>>> Stashed changes
+    if (!sessionId || !formData.crop) return;
     try {
       await saveCropMutation.mutateAsync({
         sessionId,
@@ -193,10 +185,7 @@ export default function AssPage() {
         onNext={handleInsuranceNext}
         onBack={goBack}
         loading={saveInsuranceMutation.isPending}
-<<<<<<< Updated upstream
-=======
         disabled={formData.hasInsurance === null}
->>>>>>> Stashed changes
         errorMsg={formatCreditError(saveInsuranceMutation.error)}
       />
     );

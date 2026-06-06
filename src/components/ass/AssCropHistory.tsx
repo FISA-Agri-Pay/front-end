@@ -16,11 +16,6 @@ import garlicGray  from '../../assets/crops/garlic-gray.png';
 import etcGreen    from '../../assets/crops/etc-plus-green.png';
 import etcGray     from '../../assets/crops/etc-plus-gray.png';
 
-<<<<<<< Updated upstream
-export type CropCode = 'RICE' | 'BEAN' | 'PEPPER' | 'ONION' | 'GARLIC' | 'CUSTOM';
-
-=======
->>>>>>> Stashed changes
 const CROP_CODES = new Set<CropCode>(['RICE', 'BEAN', 'PEPPER', 'ONION', 'GARLIC', 'CUSTOM']);
 
 const CROPS: { code: CropCode; label: string; green: string; gray: string }[] = [
