@@ -2,6 +2,7 @@ export type CreditLimitStatus = 'ACTIVE' | 'SUSPENDED' | 'REPAID' | 'EXPIRED' | 
 export type ApplicationStatus = 'REQUESTED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | null;
 
 export interface WalletCredit {
+  name: string;
   hasActiveLimit: boolean;
   creditLimitPublicId: string | null;
   totalLimit: number;

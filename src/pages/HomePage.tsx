@@ -64,7 +64,7 @@ export default function HomePage() {
   const [creditStatus, setCreditStatus] = useState<CreditStatus | null>(null);
   const [creditLimit, setCreditLimit] = useState(0);
   const [creditUsed, setCreditUsed] = useState(0);
-  const userName = '김농부';
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     getWalletCredit()
@@ -72,6 +72,7 @@ export default function HomePage() {
         setCreditStatus(toCreditStatus(credit));
         setCreditLimit(credit.totalLimit);
         setCreditUsed(credit.usedAmount);
+        setUserName(credit.name);
       })
       .catch(() => { setCreditStatus('before'); });
   }, []);
