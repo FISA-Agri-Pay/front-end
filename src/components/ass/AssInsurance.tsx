@@ -8,6 +8,10 @@ interface AssInsuranceProps {
   onNext: () => void;
   onBack: () => void;
   loading?: boolean;
+<<<<<<< Updated upstream
+=======
+  disabled?: boolean;
+>>>>>>> Stashed changes
   errorMsg?: string;
 }
 
@@ -22,6 +26,10 @@ export default function AssInsurance({
   onNext,
   onBack,
   loading,
+<<<<<<< Updated upstream
+=======
+  disabled,
+>>>>>>> Stashed changes
   errorMsg,
 }: AssInsuranceProps) {
   const [hasInsurance, setHasInsurance] = useState<boolean | null>(initialHasInsurance ?? null);
@@ -140,15 +148,26 @@ export default function AssInsurance({
         <button
           type="button"
           onClick={onNext}
+<<<<<<< Updated upstream
           disabled={loading}
+=======
+          disabled={disabled || loading}
+>>>>>>> Stashed changes
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
+<<<<<<< Updated upstream
             backgroundColor: loading ? '#AAAAAA' : colors.primary,
             color: colors.white,
             fontSize: 18,
             cursor: loading ? 'not-allowed' : 'pointer',
+=======
+            backgroundColor: disabled || loading ? '#AAAAAA' : colors.primary,
+            color: colors.white,
+            fontSize: 18,
+            cursor: disabled || loading ? 'not-allowed' : 'pointer',
+>>>>>>> Stashed changes
           }}
         >
           {loading ? '처리 중…' : '다음으로'}

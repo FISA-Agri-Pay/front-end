@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AssStepHeader from './AssStepHeader';
 import { colors } from '../../styles/colors';
+import type { CropCode } from '../../types/credit';
 
 import riceGreen   from '../../assets/crops/rice-green.png';
 import riceGray    from '../../assets/crops/rice-gray.png';
@@ -15,8 +16,11 @@ import garlicGray  from '../../assets/crops/garlic-gray.png';
 import etcGreen    from '../../assets/crops/etc-plus-green.png';
 import etcGray     from '../../assets/crops/etc-plus-gray.png';
 
+<<<<<<< Updated upstream
 export type CropCode = 'RICE' | 'BEAN' | 'PEPPER' | 'ONION' | 'GARLIC' | 'CUSTOM';
 
+=======
+>>>>>>> Stashed changes
 const CROP_CODES = new Set<CropCode>(['RICE', 'BEAN', 'PEPPER', 'ONION', 'GARLIC', 'CUSTOM']);
 
 const CROPS: { code: CropCode; label: string; green: string; gray: string }[] = [

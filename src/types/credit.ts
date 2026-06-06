@@ -7,6 +7,13 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+<<<<<<< Updated upstream
+=======
+// ─── 작물 코드 ────────────────────────────────────────────────────────────────
+
+export type CropCode = 'RICE' | 'BEAN' | 'PEPPER' | 'ONION' | 'GARLIC' | 'CUSTOM';
+
+>>>>>>> Stashed changes
 // ─── 세션 ─────────────────────────────────────────────────────────────────────
 
 export interface StartSessionResponse {
@@ -19,7 +26,11 @@ export interface StartSessionResponse {
 
 export interface CropRequest {
   sessionId: string;
+<<<<<<< Updated upstream
   cropType: string;
+=======
+  cropType: CropCode;
+>>>>>>> Stashed changes
 }
 
 // ─── 농지 ─────────────────────────────────────────────────────────────────────

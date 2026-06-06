@@ -20,7 +20,10 @@ interface AssDocumentsProps {
   errorMsg?: string;
 }
 
+<<<<<<< Updated upstream
 // 컴포넌트 내부 ID → API documentCode 매핑
+=======
+>>>>>>> Stashed changes
 const DOC_CODE_MAP: Record<string, DocumentCode> = {
   farmReg:      'AGRI_MANAGEMENT_REGISTRATION',
   cropInsurance: 'CROP_DISASTER_INSURANCE',
@@ -49,8 +52,14 @@ export default function AssDocuments({
     e.currentTarget.value = '';
   };
 
+<<<<<<< Updated upstream
   // requiredDocuments가 있으면 API 응답 기준으로 isRequired 결정, 없으면 기본값 사용
   const resolveRequired = (id: string, defaultRequired: boolean): boolean => {
+=======
+  // Task 1: farmReg는 API 응답과 무관하게 항상 필수
+  const resolveRequired = (id: string, defaultRequired: boolean): boolean => {
+    if (id === 'farmReg') return true;
+>>>>>>> Stashed changes
     if (!requiredDocuments) return defaultRequired;
     const code = DOC_CODE_MAP[id];
     return requiredDocuments.find((d) => d.documentCode === code)?.isRequired ?? defaultRequired;

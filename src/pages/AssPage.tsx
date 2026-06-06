@@ -13,7 +13,11 @@ import {
   useSaveInsurance,
   useSubmitCredit,
 } from '../hooks/useCreditFlow';
+<<<<<<< Updated upstream
 import type { ApiResponse, RequiredDocument } from '../types/credit';
+=======
+import type { ApiResponse, CropCode, RequiredDocument } from '../types/credit';
+>>>>>>> Stashed changes
 
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
@@ -22,7 +26,7 @@ type CreditError = AxiosError<ApiResponse<null>>;
 interface AssFormData {
   address: string;
   area: string;
-  crop: string;
+  crop: CropCode | '';   // Task 3: string → CropCode | ''
   hasInsurance: boolean | null;
   docs: Record<string, DocFile | null>;
 }
@@ -109,7 +113,11 @@ export default function AssPage() {
   };
 
   const handleCropNext = async () => {
+<<<<<<< Updated upstream
     if (!sessionId) return;
+=======
+    if (!sessionId || !formData.crop) return; // Task 3: 빈 문자열 방어
+>>>>>>> Stashed changes
     try {
       await saveCropMutation.mutateAsync({
         sessionId,
@@ -185,6 +193,10 @@ export default function AssPage() {
         onNext={handleInsuranceNext}
         onBack={goBack}
         loading={saveInsuranceMutation.isPending}
+<<<<<<< Updated upstream
+=======
+        disabled={formData.hasInsurance === null}
+>>>>>>> Stashed changes
         errorMsg={formatCreditError(saveInsuranceMutation.error)}
       />
     );
