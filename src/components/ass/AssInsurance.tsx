@@ -7,6 +7,12 @@ interface AssInsuranceProps {
   onUpdate?: (hasInsurance: boolean) => void;
   onNext: () => void;
   onBack: () => void;
+  loading?: boolean;
+<<<<<<< Updated upstream
+=======
+  disabled?: boolean;
+>>>>>>> Stashed changes
+  errorMsg?: string;
 }
 
 const OPTIONS = [
@@ -19,6 +25,12 @@ export default function AssInsurance({
   onUpdate,
   onNext,
   onBack,
+  loading,
+<<<<<<< Updated upstream
+=======
+  disabled,
+>>>>>>> Stashed changes
+  errorMsg,
 }: AssInsuranceProps) {
   const [hasInsurance, setHasInsurance] = useState<boolean | null>(initialHasInsurance ?? null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -128,19 +140,37 @@ export default function AssInsurance({
       </div>
 
       <div style={{ padding: '16px 20px 32px' }}>
+        {errorMsg && (
+          <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
+            {errorMsg}
+          </p>
+        )}
         <button
           type="button"
           onClick={onNext}
+<<<<<<< Updated upstream
+          disabled={loading}
+=======
+          disabled={disabled || loading}
+>>>>>>> Stashed changes
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
-            backgroundColor: colors.primary,
+<<<<<<< Updated upstream
+            backgroundColor: loading ? '#AAAAAA' : colors.primary,
             color: colors.white,
             fontSize: 18,
+            cursor: loading ? 'not-allowed' : 'pointer',
+=======
+            backgroundColor: disabled || loading ? '#AAAAAA' : colors.primary,
+            color: colors.white,
+            fontSize: 18,
+            cursor: disabled || loading ? 'not-allowed' : 'pointer',
+>>>>>>> Stashed changes
           }}
         >
-          다음으로
+          {loading ? '처리 중…' : '다음으로'}
         </button>
       </div>
     </div>

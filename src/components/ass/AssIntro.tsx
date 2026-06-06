@@ -20,9 +20,11 @@ const STEPS: AssStep[] = [
 
 interface AssIntroProps {
   onNext: () => void;
+  loading?: boolean;
+  errorMsg?: string;
 }
 
-export default function AssIntro({ onNext }: AssIntroProps) {
+export default function AssIntro({ onNext, loading, errorMsg }: AssIntroProps) {
   const navigate = useNavigate();
 
   return (
@@ -88,18 +90,26 @@ export default function AssIntro({ onNext }: AssIntroProps) {
 
       {/* 하단 버튼 */}
       <div style={{ padding: '16px 20px 32px' }}>
+        {errorMsg && (
+          <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
+            {errorMsg}
+          </p>
+        )}
         <button
+          type="button"
           onClick={onNext}
+          disabled={loading}
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
-            backgroundColor: colors.primary,
+            backgroundColor: loading ? '#AAAAAA' : colors.primary,
             color: colors.white,
             fontSize: 18,
+            cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          한도 산정 시작하기
+          {loading ? '처리 중…' : '한도 산정 시작하기'}
         </button>
       </div>
     </div>

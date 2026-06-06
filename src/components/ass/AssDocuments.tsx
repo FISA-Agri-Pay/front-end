@@ -3,33 +3,46 @@ import type { ChangeEvent } from 'react';
 import { Camera, CheckCircle } from 'lucide-react';
 import AssStepHeader from './AssStepHeader';
 import { colors } from '../../styles/colors';
+import type { DocumentCode, RequiredDocument } from '../../types/credit';
 
 export interface DocFile {
   file: File;
   previewUrl: string;
 }
 
-interface FormSnapshot {
-  address: string;
-  area: string;
-  crop: string;
-  hasInsurance: boolean | null;
-}
-
 interface AssDocumentsProps {
   docs: Record<string, DocFile | null>;
   onDocUpdate: (id: string, docFile: DocFile | null) => void;
-  formSnapshot: FormSnapshot;
+  requiredDocuments?: RequiredDocument[];
   onNext: () => void;
   onBack: () => void;
+  loading?: boolean;
+  errorMsg?: string;
 }
 
+<<<<<<< Updated upstream
+// 컴포넌트 내부 ID → API documentCode 매핑
+=======
+>>>>>>> Stashed changes
+const DOC_CODE_MAP: Record<string, DocumentCode> = {
+  farmReg:      'AGRI_MANAGEMENT_REGISTRATION',
+  cropInsurance: 'CROP_DISASTER_INSURANCE',
+};
+
 const DOCUMENTS = [
-  { id: 'farmReg',       label: '농업 경영체 등록 확인서',    required: true  },
-  { id: 'cropInsurance', label: '농작물 재해보험 가입 증명서', required: false },
+  { id: 'farmReg',       label: '농업 경영체 등록 확인서',    defaultRequired: true  },
+  { id: 'cropInsurance', label: '농작물 재해보험 가입 증명서', defaultRequired: false },
 ];
 
-export default function AssDocuments({ docs, onDocUpdate, formSnapshot, onNext, onBack }: AssDocumentsProps) {
+export default function AssDocuments({
+  docs,
+  onDocUpdate,
+  requiredDocuments,
+  onNext,
+  onBack,
+  loading,
+  errorMsg,
+}: AssDocumentsProps) {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const handleFileChange = (id: string, e: ChangeEvent<HTMLInputElement>) => {
@@ -39,22 +52,22 @@ export default function AssDocuments({ docs, onDocUpdate, formSnapshot, onNext, 
     e.currentTarget.value = '';
   };
 
-  const isFarmRegAttached = !!docs.farmReg;
-
-  const handleSubmit = () => {
-    if (!isFarmRegAttached) return;
-    if (import.meta.env.DEV) {
-      console.log('ASS 심사 신청 데이터:', {
-        address: formSnapshot.address,
-        area: formSnapshot.area,
-        crop: formSnapshot.crop,
-        hasInsurance: formSnapshot.hasInsurance,
-        farmRegDoc: docs.farmReg?.file ?? null,
-        cropInsuranceDoc: docs.cropInsurance?.file ?? null,
-      });
-    }
-    onNext();
+<<<<<<< Updated upstream
+  // requiredDocuments가 있으면 API 응답 기준으로 isRequired 결정, 없으면 기본값 사용
+  const resolveRequired = (id: string, defaultRequired: boolean): boolean => {
+=======
+  // Task 1: farmReg는 API 응답과 무관하게 항상 필수
+  const resolveRequired = (id: string, defaultRequired: boolean): boolean => {
+    if (id === 'farmReg') return true;
+>>>>>>> Stashed changes
+    if (!requiredDocuments) return defaultRequired;
+    const code = DOC_CODE_MAP[id];
+    return requiredDocuments.find((d) => d.documentCode === code)?.isRequired ?? defaultRequired;
   };
+
+  const canSubmit = DOCUMENTS.every(({ id, defaultRequired }) =>
+    !resolveRequired(id, defaultRequired) || !!docs[id],
+  );
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
@@ -75,9 +88,10 @@ export default function AssDocuments({ docs, onDocUpdate, formSnapshot, onNext, 
       </div>
 
       <div className="flex-1 flex flex-col gap-5" style={{ paddingLeft: 20, paddingRight: 20 }}>
-        {DOCUMENTS.map(({ id, label, required }) => {
+        {DOCUMENTS.map(({ id, label, defaultRequired }) => {
           const docFile = docs[id];
           const isDone = !!docFile;
+          const isRequired = resolveRequired(id, defaultRequired);
 
           return (
             <div
@@ -93,7 +107,7 @@ export default function AssDocuments({ docs, onDocUpdate, formSnapshot, onNext, 
                 <span className="font-bold text-[16px]" style={{ color: colors.text.dark }}>
                   {label}
                 </span>
-                {required && (
+                {isRequired && (
                   <span
                     className="font-bold text-[12px] rounded-md"
                     style={{
@@ -162,20 +176,26 @@ export default function AssDocuments({ docs, onDocUpdate, formSnapshot, onNext, 
       </div>
 
       <div style={{ padding: '16px 20px 32px' }}>
+        {errorMsg && (
+          <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
+            {errorMsg}
+          </p>
+        )}
         <button
           type="button"
-          onClick={handleSubmit}
-          disabled={!isFarmRegAttached}
+          onClick={onNext}
+          disabled={!canSubmit || loading}
           className="w-full font-bold"
           style={{
             height: 56,
             borderRadius: 12,
-            backgroundColor: isFarmRegAttached ? colors.primary : '#CCCCCC',
+            backgroundColor: canSubmit && !loading ? colors.primary : '#CCCCCC',
             color: colors.white,
             fontSize: 18,
+            cursor: canSubmit && !loading ? 'pointer' : 'not-allowed',
           }}
         >
-          심사 신청하기
+          {loading ? '처리 중…' : '심사 신청하기'}
         </button>
       </div>
     </div>
