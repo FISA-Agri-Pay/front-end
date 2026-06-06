@@ -11,6 +11,7 @@ import SignupPage from './pages/SignupPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
@@ -20,17 +21,21 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/product-detail/:productId" element={<ProductDetailPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/mypage" element={<MyPage />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/ass" element={<AssPage />} />
             <Route path="/signup/*" element={<SignupPage />} />
             <Route path="/signup-account" element={<SignupPage />} />
+
+            <Route element={<PrivateRoute />}>
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/product-detail/:productId" element={<ProductDetailPage />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/mypage" element={<MyPage />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/ass" element={<AssPage />} />
+            </Route>
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
