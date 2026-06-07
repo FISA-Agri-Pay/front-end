@@ -52,7 +52,7 @@ export const useCartStore = create<CartState>((set) => ({
       return {
         items: state.items.map((item) =>
           item.productId === productId
-            ? { ...item, quantity: clampQuantity(item.quantity + safeQuantity) }
+            ? { ...item, snapshot, quantity: clampQuantity(item.quantity + safeQuantity) }
             : item,
         ),
       };
