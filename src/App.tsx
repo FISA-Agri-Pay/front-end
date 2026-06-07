@@ -12,6 +12,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import PrivateRoute from './components/PrivateRoute';
+import ChatbotPage from './pages/ChatbotPage';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/product-detail/:productId" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/chatbot" element={<ChatbotPage />} />
               <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/mypage" element={<MyPage />} />

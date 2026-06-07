@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, ChevronRight, Truck } from 'lucide-react';
+import { Bot, ChevronRight, Truck } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { colors } from '../styles/colors';
 import logoImg from '../assets/app_logo_title.png';
@@ -90,12 +90,13 @@ export default function HomePage() {
           alt="로고"
           style={{ width: 77, height: 37, objectFit: 'contain' }}
         />
-        <button type="button" aria-label="알림" className="relative p-1">
-          <Bell size={22} color={colors.text.dark} />
-          <span
-            className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: colors.text.danger }}
-          />
+        <button
+          type="button"
+          aria-label="콩콩팥팥 도우미 열기"
+          className="relative p-1"
+          onClick={() => navigate('/chatbot')}
+        >
+          <Bot size={24} color={colors.text.dark} strokeWidth={2.2} />
         </button>
       </div>
 
