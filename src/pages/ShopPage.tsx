@@ -166,7 +166,7 @@ export default function ShopPage() {
                   <p className="text-xs mb-0.5" style={{ color: colors.text.muted }}>
                     {p.categoryName}
                   </p>
-                  <p className="text-sm font-bold leading-snug mb-1" style={{ color: colors.text.dark }}>
+                  <p className="text-sm font-bold leading-snug mb-1 truncate" style={{ color: colors.text.dark }}>
                     {p.name}
                   </p>
                   <p className="text-sm font-bold" style={{ color: colors.primary }}>
