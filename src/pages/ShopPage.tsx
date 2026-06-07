@@ -34,6 +34,7 @@ export default function ShopPage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const timer = setTimeout(() => {
       setLoading(true);
       setError(false);
@@ -41,11 +42,11 @@ export default function ShopPage() {
         categoryId: selectedCategoryId ?? undefined,
         keyword: searchQuery || undefined,
       })
-        .then(setProducts)
-        .catch(() => setError(true))
-        .finally(() => setLoading(false));
+        .then((data) => { if (!cancelled) setProducts(data); })
+        .catch(() => { if (!cancelled) setError(true); })
+        .finally(() => { if (!cancelled) setLoading(false); });
     }, 300);
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [searchQuery, selectedCategoryId]);
 
   return (
