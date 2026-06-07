@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, MoreVertical, Plus, Send, Truck } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -7,45 +8,98 @@ import { colors } from '../styles/colors';
 
 type ChatMessageType = 'text' | 'credit-summary' | 'delivery-status' | 'recommendation';
 
+type ChatCard =
+  | {
+      type: 'credit-summary';
+      limit: number;
+      used: number;
+    }
+  | {
+      type: 'delivery-status';
+      itemName: string;
+      status: string;
+    }
+  | {
+      type: 'recommendation';
+      productName: string;
+      price: number;
+    };
+
 type ChatMessage = {
   id: number;
   sender: 'assistant' | 'user';
   text: string;
   time?: string;
   type?: ChatMessageType;
+  card?: ChatCard;
 };
 
 const quickQuestions = ['비료 추천해줘', '배송 현황 조회', '스마트팜 센서 문의'];
 
-const creditLimit = 4000000;
-const creditUsed = 2500000;
+const CREDIT_LIMIT = 4000000;
+const CREDIT_USED = 2500000;
+const FERTILIZER_PRODUCT = { productName: '복합 비료 20kg', price: 50000 };
+const SENSOR_PRODUCT = { productName: '스마트팜 센서 키트', price: 250000 };
+const LATEST_DELIVERY = { itemName: '복합 비료 20kg', status: '배송 중' };
 
-function getDemoReply(message: string): Pick<ChatMessage, 'text' | 'type'> {
+const currencyFormatter = new Intl.NumberFormat('ko-KR');
+
+function formatCurrency(amount: number) {
+  return `${currencyFormatter.format(amount)}원`;
+}
+
+function formatKoreanDate(date: Date) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  }).format(date);
+}
+
+function getDemoReply(message: string): Pick<ChatMessage, 'text' | 'type' | 'card'> {
   if (message.includes('배송')) {
     return {
       type: 'delivery-status',
-      text: "최근 주문하신 '복합 비료 20kg'는 현재 배송 중입니다.",
-    };
-  }
-
-  if (message.includes('비료') || message.includes('추천')) {
-    return {
-      type: 'recommendation',
-      text: '현재 한도와 작물 정보를 기준으로 복합 비료 20kg를 우선 추천드릴게요.',
+      text: `최근 주문하신 '${LATEST_DELIVERY.itemName}'는 현재 ${LATEST_DELIVERY.status}입니다.`,
+      card: {
+        type: 'delivery-status',
+        ...LATEST_DELIVERY,
+      },
     };
   }
 
   if (message.includes('센서')) {
     return {
       type: 'recommendation',
-      text: '스마트팜 센서 키트는 토양 습도와 온도 확인에 적합해요. 상점에서 상세 정보를 확인할 수 있습니다.',
+      text: `${SENSOR_PRODUCT.productName}는 토양 습도와 온도 확인에 적합해요. 상점에서 상세 정보를 확인할 수 있습니다.`,
+      card: {
+        type: 'recommendation',
+        ...SENSOR_PRODUCT,
+      },
+    };
+  }
+
+  if (message.includes('비료') || message.includes('추천')) {
+    return {
+      type: 'recommendation',
+      text: `현재 한도와 작물 정보를 기준으로 ${FERTILIZER_PRODUCT.productName}를 우선 추천드릴게요.`,
+      card: {
+        type: 'recommendation',
+        ...FERTILIZER_PRODUCT,
+      },
     };
   }
 
   if (message.includes('외상') || message.includes('잔액') || message.includes('한도')) {
     return {
       type: 'credit-summary',
-      text: `현재 고객님의 외상 금액은 ${creditUsed.toLocaleString()}원입니다.`,
+      text: `현재 고객님의 외상 금액은 ${formatCurrency(CREDIT_USED)}입니다.`,
+      card: {
+        type: 'credit-summary',
+        limit: CREDIT_LIMIT,
+        used: CREDIT_USED,
+      },
     };
   }
 
@@ -69,8 +123,8 @@ function AssistantAvatar() {
 function AssistantCard({ message }: { message: ChatMessage }) {
   const navigate = useNavigate();
 
-  if (message.type === 'credit-summary') {
-    const remaining = creditLimit - creditUsed;
+  if (message.card?.type === 'credit-summary') {
+    const remaining = message.card.limit - message.card.used;
 
     return (
       <div
@@ -82,10 +136,10 @@ function AssistantCard({ message }: { message: ChatMessage }) {
             외상 한도 현황
           </p>
           <p className="mt-1 text-[22px] font-extrabold leading-7" style={{ color: colors.text.dark }}>
-            총 {creditLimit.toLocaleString()}원 한도
+            총 {formatCurrency(message.card.limit)} 한도
           </p>
           <p className="mt-2 text-[13px] font-bold" style={{ color: colors.text.muted }}>
-            사용 {creditUsed.toLocaleString()}원 · 잔여 {remaining.toLocaleString()}원
+            사용 {formatCurrency(message.card.used)} · 잔여 {formatCurrency(remaining)}
           </p>
         </div>
         <div className="px-4 pb-4">
@@ -97,7 +151,7 @@ function AssistantCard({ message }: { message: ChatMessage }) {
     );
   }
 
-  if (message.type === 'delivery-status') {
+  if (message.card?.type === 'delivery-status') {
     return (
       <button
         type="button"
@@ -113,17 +167,17 @@ function AssistantCard({ message }: { message: ChatMessage }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[14px] font-extrabold leading-5" style={{ color: colors.text.dark }}>
-            복합 비료 20kg
+            {message.card.itemName}
           </p>
           <p className="mt-0.5 text-[13px] font-bold" style={{ color: colors.primary }}>
-            배송 중
+            {message.card.status}
           </p>
         </div>
       </button>
     );
   }
 
-  if (message.type === 'recommendation') {
+  if (message.card?.type === 'recommendation') {
     return (
       <div
         className="mt-3 rounded-[14px] bg-white p-4"
@@ -133,10 +187,10 @@ function AssistantCard({ message }: { message: ChatMessage }) {
           추천 상품
         </p>
         <p className="mt-1 text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
-          복합 비료 20kg
+          {message.card.productName}
         </p>
         <p className="mt-1 text-[14px] font-extrabold" style={{ color: colors.text.dark }}>
-          50,000원
+          {formatCurrency(message.card.price)}
         </p>
         <div className="mt-4">
           <Button variant="outline" style={{ height: 42, borderRadius: 12 }} onClick={() => navigate('/shop')}>
@@ -164,7 +218,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
           )}
           <div
             className="rounded-[18px] rounded-br-[6px] px-4 py-3"
-            style={{ backgroundColor: '#2F7D35', color: colors.white }}
+            style={{ backgroundColor: colors.primary, color: colors.white }}
           >
             <p className="text-[16px] font-medium leading-6">{message.text}</p>
           </div>
@@ -195,6 +249,8 @@ function ChatBubble({ message }: { message: ChatMessage }) {
 export default function ChatbotPage() {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
+  const [chatDateLabel] = useState(() => formatKoreanDate(new Date()));
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -212,9 +268,18 @@ export default function ChatbotPage() {
       id: 3,
       sender: 'assistant',
       type: 'credit-summary',
-      text: `현재 고객님의 외상 금액은 ${creditUsed.toLocaleString()}원입니다.`,
+      text: `현재 고객님의 외상 금액은 ${formatCurrency(CREDIT_USED)}입니다.`,
+      card: {
+        type: 'credit-summary',
+        limit: CREDIT_LIMIT,
+        used: CREDIT_USED,
+      },
     },
   ]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: 'end' });
+  }, [messages]);
 
   const sendMessage = (message: string) => {
     const trimmed = message.trim();
@@ -243,13 +308,24 @@ export default function ChatbotPage() {
     setInput('');
   };
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    sendMessage(input);
+  };
+
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
       <PageHeader
         title="콩콩팥팥 도우미"
         onBack={() => navigate(-1)}
         rightAction={
-          <button type="button" aria-label="챗봇 메뉴" className="flex h-8 w-8 items-center justify-center">
+          <button
+            type="button"
+            aria-label="챗봇 메뉴 준비 중"
+            title="챗봇 메뉴 준비 중"
+            className="flex h-8 w-8 items-center justify-center"
+            disabled
+          >
             <MoreVertical size={22} color={colors.text.dark} />
           </button>
         }
@@ -260,12 +336,13 @@ export default function ChatbotPage() {
           className="mx-auto mb-8 w-fit rounded-full px-4 py-2 text-[13px] font-bold"
           style={{ backgroundColor: '#EBE8E0', color: '#6F7583' }}
         >
-          2026년 6월 6일 토요일
+          {chatDateLabel}
         </div>
         <div className="flex flex-col gap-8">
           {messages.map((message) => (
             <ChatBubble key={message.id} message={message} />
           ))}
+          <div ref={messagesEndRef} />
         </div>
       </main>
 
@@ -290,16 +367,19 @@ export default function ChatbotPage() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 px-4 pb-5 pt-2">
-          <button type="button" aria-label="첨부 추가" className="flex h-10 w-10 shrink-0 items-center justify-center">
+        <form className="flex items-center gap-2 px-4 pb-5 pt-2" onSubmit={handleSubmit}>
+          <button
+            type="button"
+            aria-label="첨부 기능 준비 중"
+            title="첨부 기능 준비 중"
+            className="flex h-10 w-10 shrink-0 items-center justify-center"
+            disabled
+          >
             <Plus size={25} color="#9AA0AE" />
           </button>
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') sendMessage(input);
-            }}
             placeholder="메시지를 입력하세요..."
             className="h-12 min-w-0 flex-1 rounded-full border px-5 text-[15px] font-bold outline-none"
             style={{
@@ -309,15 +389,15 @@ export default function ChatbotPage() {
             }}
           />
           <button
-            type="button"
+            type="submit"
             aria-label="메시지 보내기"
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.primary }}
-            onClick={() => sendMessage(input)}
+            style={{ backgroundColor: colors.primary, opacity: input.trim() ? 1 : 0.5 }}
+            disabled={!input.trim()}
           >
             <Send size={22} color={colors.white} />
           </button>
-        </div>
+        </form>
       </footer>
     </div>
   );

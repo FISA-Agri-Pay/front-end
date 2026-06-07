@@ -26,6 +26,8 @@ export default function PageHeader({ title, onBack, rightAction }: PageHeaderPro
     >
       {onBack && (
         <button
+          type="button"
+          aria-label="이전 페이지로 이동"
           onClick={onBack}
           className="absolute left-4 flex items-center justify-center"
           style={{ padding: 4 }}
