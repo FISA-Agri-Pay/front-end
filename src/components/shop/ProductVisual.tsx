@@ -1,44 +1,41 @@
-import { Leaf, Package, Sprout } from 'lucide-react';
+import { FlaskConical, Sprout, Tractor } from 'lucide-react';
 import { colors } from '../../styles/colors';
 import type { ProductVisual as ProductVisualType } from '../../data/shop';
 
 interface ProductVisualProps {
   visual: ProductVisualType;
-  size?: 'sm' | 'lg';
+  size?: 'sm' | 'md' | 'lg';
+  imageUrl?: string;
 }
 
 const visualMeta = {
-  service: { Icon: Leaf, bg: '#EFE9DA', fg: '#7B745D' },
+  service: { Icon: Tractor, bg: '#E8EFF5', fg: '#4A6E8A' },
   seedling: { Icon: Sprout, bg: '#F0ECE1', fg: '#7A6D52' },
-  fertilizer: { Icon: Package, bg: '#EFE9DA', fg: colors.primary },
+  fertilizer: { Icon: FlaskConical, bg: '#EAF2E8', fg: colors.primary },
 } as const;
 
-export default function ProductVisual({ visual, size = 'sm' }: ProductVisualProps) {
+const sizeMeta = {
+  sm: { height: 92, iconSize: 32, radius: 8 },
+  md: { height: 120, iconSize: 40, radius: 10 },
+  lg: { height: 280, iconSize: 84, radius: 0 },
+} as const;
+
+export default function ProductVisual({ visual, size = 'sm', imageUrl }: ProductVisualProps) {
   const { Icon, bg, fg } = visualMeta[visual];
-  const isLarge = size === 'lg';
+  const { height, iconSize, radius } = sizeMeta[size];
 
   return (
     <div
-      className="flex shrink-0 items-center justify-center overflow-hidden"
-      style={{
-        width: '100%',
-        height: isLarge ? 210 : 92,
-        borderRadius: isLarge ? 0 : 8,
-        background: bg,
-      }}
+      className="shrink-0 overflow-hidden"
+      style={{ width: '100%', height, borderRadius: radius, background: bg }}
     >
-      <div
-        className="flex shrink-0 items-center justify-center"
-        style={{
-          width: isLarge ? 132 : 48,
-          height: isLarge ? 156 : 48,
-          borderRadius: isLarge ? 18 : 14,
-          backgroundColor: isLarge ? '#C9BA74' : 'transparent',
-          boxShadow: isLarge ? 'inset 0 -18px 24px rgba(65, 53, 24, 0.18)' : undefined,
-        }}
-      >
-        <Icon size={isLarge ? 72 : 32} color={isLarge ? colors.white : fg} strokeWidth={1.8} />
-      </div>
+      {imageUrl ? (
+        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <Icon size={iconSize} color={fg} strokeWidth={1.8} />
+        </div>
+      )}
     </div>
   );
 }

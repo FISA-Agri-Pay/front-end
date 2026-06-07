@@ -1,64 +1,128 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ShoppingCart } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
 import Button from '../components/Button';
 import ProductVisual from '../components/shop/ProductVisual';
 import QuantityStepper from '../components/shop/QuantityStepper';
 import { colors } from '../styles/colors';
-import { CREDIT_LIMIT, getProductById } from '../data/shop';
-import { useCartStore } from '../stores/cartStore';
+import type { ProductVisual as ProductVisualType } from '../data/shop';
+import { selectCartLines, useCartStore } from '../stores/cartStore';
+import { fetchProductDetail } from '../api/shop';
+import type { ApiProductDetail } from '../api/shop';
+import { getWalletCredit } from '../api/wallet';
+
+function categoryToVisual(categoryName: string): ProductVisualType {
+  if (categoryName.includes('비료') || categoryName.includes('자재')) return 'fertilizer';
+  if (categoryName.includes('씨앗') || categoryName.includes('모종')) return 'seedling';
+  return 'service';
+}
 
 export default function ProductDetailPage() {
   const navigate = useNavigate();
-  const { productId } = useParams();
-  const product = getProductById(Number(productId));
+  const { productId } = useParams<{ productId: string }>();
   const addItem = useCartStore((state) => state.addItem);
   const replaceWithItem = useCartStore((state) => state.replaceWithItem);
+  const items = useCartStore((state) => state.items);
+  const cartCount = selectCartLines(items).reduce((sum, line) => sum + line.quantity, 0);
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<ApiProductDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
 
-  if (!product) {
+  useEffect(() => {
+    if (!productId) { setLoading(false); return; }
+    setLoading(true);
+    setError(false);
+    fetchProductDetail(productId)
+      .then((prod) => setProduct(prod))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+    getWalletCredit()
+      .then((credit) => setRemainingCredit(credit.remainingAmount))
+      .catch(() => {});
+  }, [productId]);
+
+  const headerBar = (
+    <header className="flex items-center justify-between px-4 pb-2 pt-4 bg-white">
+      <button
+        type="button"
+        aria-label="뒤로가기"
+        onClick={() => navigate(-1)}
+        className="flex h-9 w-9 items-center justify-center"
+      >
+        <ChevronLeft size={24} strokeWidth={2.2} color={colors.text.dark} />
+      </button>
+      <button
+        type="button"
+        aria-label="장바구니"
+        onClick={() => navigate('/cart')}
+        className="relative flex h-9 w-9 items-center justify-center"
+      >
+        <ShoppingCart size={23} strokeWidth={2.1} color={colors.text.dark} />
+        {cartCount > 0 && (
+          <span
+            className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+            style={{ backgroundColor: colors.text.danger }}
+          >
+            {cartCount}
+          </span>
+        )}
+      </button>
+    </header>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
+        {headerBar}
+        <div className="h-[280px] animate-pulse" style={{ backgroundColor: colors.white }} />
+        <div className="space-y-3 px-5 pt-4">
+          <div className="h-5 w-20 animate-pulse rounded-md" style={{ backgroundColor: colors.subGreen }} />
+          <div className="h-8 w-3/4 animate-pulse rounded-md" style={{ backgroundColor: colors.subGreen }} />
+          <div className="h-7 w-1/2 animate-pulse rounded-md" style={{ backgroundColor: colors.subGreen }} />
+          <div className="mt-2 h-14 animate-pulse rounded-xl" style={{ backgroundColor: colors.subGreen }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: colors.bg }}>
-        <PageHeader title="상품 상세" onBack={() => navigate(-1)} />
+        {headerBar}
         <p className="py-20 text-center text-sm" style={{ color: colors.text.muted }}>
-          상품을 찾을 수 없습니다.
+          {error ? '상품 정보를 불러오지 못했습니다.' : '상품을 찾을 수 없습니다.'}
         </p>
       </div>
     );
   }
 
+  const visual = categoryToVisual(product.categoryName);
   const totalAmount = product.price * quantity;
+  const isSoldOut = product.status !== 'ON_SALE';
+
+  const snapshot = {
+    name: product.name,
+    price: product.price,
+    categoryName: product.categoryName,
+    unit: product.unit,
+    visual,
+    tag: product.unit,
+  };
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
-      <header className="flex items-center justify-between px-4 pb-2 pt-4">
-        <button
-          type="button"
-          aria-label="뒤로가기"
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center"
-        >
-          <ChevronLeft size={24} strokeWidth={2.2} color={colors.text.dark} />
-        </button>
-        <button
-          type="button"
-          aria-label="장바구니"
-          onClick={() => navigate('/cart')}
-          className="flex h-9 w-9 items-center justify-center"
-        >
-          <ShoppingCart size={23} strokeWidth={2.1} color={colors.text.dark} />
-        </button>
-      </header>
+      {headerBar}
 
-      <ProductVisual visual={product.visual} size="lg" />
+      <ProductVisual visual={visual} size="lg" />
 
       <main className="flex-1 px-5 pb-28 pt-3">
         <span
           className="inline-flex rounded-[5px] px-3 py-1 text-[11px] font-bold"
           style={{ backgroundColor: colors.subGreen, color: colors.primary }}
         >
-          {product.category}
+          {product.categoryName}
         </span>
         <h1 className="mt-2 text-[22px] font-extrabold leading-[30px]" style={{ color: colors.text.dark }}>
           {product.name}
@@ -66,6 +130,17 @@ export default function ProductDetailPage() {
         <p className="mt-1 text-[24px] font-extrabold" style={{ color: colors.text.dark }}>
           {product.price.toLocaleString()} 원
         </p>
+
+        {isSoldOut && (
+          <div
+            className="mt-3 flex items-center justify-center rounded-xl px-4 py-2"
+            style={{ backgroundColor: '#FFF3F3', border: '1px solid #FFB8B8' }}
+          >
+            <span className="text-sm font-bold" style={{ color: colors.text.danger }}>
+              현재 판매 중단된 상품입니다.
+            </span>
+          </div>
+        )}
 
         <div
           className="mt-3 flex items-center justify-between rounded-xl px-4"
@@ -75,24 +150,16 @@ export default function ProductDetailPage() {
             현재 남은 외상 한도
           </span>
           <span className="text-[20px] font-extrabold" style={{ color: colors.text.dark }}>
-            {CREDIT_LIMIT.toLocaleString()} 원
+            {remainingCredit !== null ? `${remainingCredit.toLocaleString()} 원` : '-'}
           </span>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4" style={{ borderTop: '1.5px dashed #E5E0D2' }} />
+
+        <div className="mt-4">
           <p className="text-[15px] font-extrabold leading-6" style={{ color: colors.text.dark }}>
             {product.description}
           </p>
-          <dl className="mt-3 space-y-1 text-[13px]" style={{ color: colors.text.muted }}>
-            <div className="flex gap-2">
-              <dt>제조사:</dt>
-              <dd>{product.manufacturer}</dd>
-            </div>
-            <div className="flex gap-2">
-              <dt>배송비:</dt>
-              <dd>{product.shipping}</dd>
-            </div>
-          </dl>
         </div>
       </main>
 
@@ -104,16 +171,17 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-[72px_1fr] gap-2">
           <Button
             variant="outline"
+            disabled={isSoldOut}
             onClick={() => {
-              addItem(product.id, quantity);
-              navigate('/cart');
+              addItem(product.productId, snapshot, quantity);
             }}
           >
             담기
           </Button>
           <Button
+            disabled={isSoldOut}
             onClick={() => {
-              replaceWithItem(product.id, quantity);
+              replaceWithItem(product.productId, snapshot, quantity);
               navigate('/cart');
             }}
           >

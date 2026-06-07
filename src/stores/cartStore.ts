@@ -1,23 +1,34 @@
 import { create } from 'zustand';
-import { SHOP_PRODUCTS, type ShopProduct } from '../data/shop';
+import type { ProductVisual } from '../data/shop';
+
+export interface ProductSnapshot {
+  name: string;
+  price: number;
+  categoryName: string;
+  unit: string;
+  visual: ProductVisual;
+  tag: string;
+}
 
 interface CartItem {
-  productId: number;
+  productId: string;
   quantity: number;
+  snapshot: ProductSnapshot;
 }
 
 export interface CartLine {
-  product: ShopProduct;
+  productId: string;
+  snapshot: ProductSnapshot;
   quantity: number;
   lineTotal: number;
 }
 
 interface CartState {
   items: CartItem[];
-  addItem: (productId: number, quantity?: number) => void;
-  replaceWithItem: (productId: number, quantity?: number) => void;
-  removeItem: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addItem: (productId: string, snapshot: ProductSnapshot, quantity?: number) => void;
+  replaceWithItem: (productId: string, snapshot: ProductSnapshot, quantity?: number) => void;
+  removeItem: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
 }
 
@@ -29,25 +40,25 @@ const clampQuantity = (quantity: number) =>
 
 export const useCartStore = create<CartState>((set) => ({
   items: [],
-  addItem: (productId, quantity = 1) =>
+  addItem: (productId, snapshot, quantity = 1) =>
     set((state) => {
       const safeQuantity = clampQuantity(quantity);
       const existingItem = state.items.find((item) => item.productId === productId);
 
       if (!existingItem) {
-        return { items: [...state.items, { productId, quantity: safeQuantity }] };
+        return { items: [...state.items, { productId, snapshot, quantity: safeQuantity }] };
       }
 
       return {
         items: state.items.map((item) =>
           item.productId === productId
-            ? { ...item, quantity: clampQuantity(item.quantity + safeQuantity) }
+            ? { ...item, snapshot, quantity: clampQuantity(item.quantity + safeQuantity) }
             : item,
         ),
       };
     }),
-  replaceWithItem: (productId, quantity = 1) =>
-    set({ items: [{ productId, quantity: clampQuantity(quantity) }] }),
+  replaceWithItem: (productId, snapshot, quantity = 1) =>
+    set({ items: [{ productId, snapshot, quantity: clampQuantity(quantity) }] }),
   removeItem: (productId) =>
     set((state) => ({
       items: state.items.filter((item) => item.productId !== productId),
@@ -61,17 +72,11 @@ export const useCartStore = create<CartState>((set) => ({
   clearCart: () => set({ items: [] }),
 }));
 
-export function selectCartLines(items: CartItem[]): CartLine[] {
-  return items
-    .map((item) => {
-      const product = SHOP_PRODUCTS.find((candidate) => candidate.id === item.productId);
-      if (!product) return null;
-
-      return {
-        product,
-        quantity: item.quantity,
-        lineTotal: product.price * item.quantity,
-      };
-    })
-    .filter((line): line is CartLine => Boolean(line));
+export function selectCartLines(items: ReturnType<typeof useCartStore.getState>['items']): CartLine[] {
+  return items.map((item) => ({
+    productId: item.productId,
+    snapshot: item.snapshot,
+    quantity: item.quantity,
+    lineTotal: item.snapshot.price * item.quantity,
+  }));
 }
