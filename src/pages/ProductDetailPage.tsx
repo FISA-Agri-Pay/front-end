@@ -31,16 +31,16 @@ export default function ProductDetailPage() {
   const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!productId) return;
+    if (!productId) { setLoading(false); return; }
     setLoading(true);
     setError(false);
-    Promise.all([fetchProductDetail(productId), getWalletCredit()])
-      .then(([prod, credit]) => {
-        setProduct(prod);
-        setRemainingCredit(credit.remainingAmount);
-      })
+    fetchProductDetail(productId)
+      .then((prod) => setProduct(prod))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+    getWalletCredit()
+      .then((credit) => setRemainingCredit(credit.remainingAmount))
+      .catch(() => {});
   }, [productId]);
 
   const headerBar = (
