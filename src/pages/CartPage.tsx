@@ -62,7 +62,7 @@ export default function CartPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-extrabold leading-5" style={{ color: colors.text.dark }}>
-                        {snapshot.name} ({snapshot.tag})
+                        {snapshot.name}{snapshot.tag ? ` (${snapshot.tag})` : ""}
                       </p>
                       <p className="mt-3 text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
                         {lineTotal.toLocaleString()}원
