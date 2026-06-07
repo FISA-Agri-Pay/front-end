@@ -6,7 +6,7 @@ import ProductVisual from '../components/shop/ProductVisual';
 import QuantityStepper from '../components/shop/QuantityStepper';
 import { colors } from '../styles/colors';
 import type { ProductVisual as ProductVisualType } from '../data/shop';
-import { useCartStore } from '../stores/cartStore';
+import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchProductDetail } from '../api/shop';
 import type { ApiProductDetail } from '../api/shop';
 import { getWalletCredit } from '../api/wallet';
@@ -22,6 +22,8 @@ export default function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
   const addItem = useCartStore((state) => state.addItem);
   const replaceWithItem = useCartStore((state) => state.replaceWithItem);
+  const items = useCartStore((state) => state.items);
+  const cartCount = selectCartLines(items).reduce((sum, line) => sum + line.quantity, 0);
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<ApiProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ export default function ProductDetailPage() {
   }, [productId]);
 
   const headerBar = (
-    <header className="flex items-center justify-between px-4 pb-2 pt-4">
+    <header className="flex items-center justify-between px-4 pb-2 pt-4 bg-white">
       <button
         type="button"
         aria-label="뒤로가기"
@@ -55,9 +57,17 @@ export default function ProductDetailPage() {
         type="button"
         aria-label="장바구니"
         onClick={() => navigate('/cart')}
-        className="flex h-9 w-9 items-center justify-center"
+        className="relative flex h-9 w-9 items-center justify-center"
       >
         <ShoppingCart size={23} strokeWidth={2.1} color={colors.text.dark} />
+        {cartCount > 0 && (
+          <span
+            className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+            style={{ backgroundColor: colors.text.danger }}
+          >
+            {cartCount}
+          </span>
+        )}
       </button>
     </header>
   );
