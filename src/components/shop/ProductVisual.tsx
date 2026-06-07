@@ -4,7 +4,8 @@ import type { ProductVisual as ProductVisualType } from '../../data/shop';
 
 interface ProductVisualProps {
   visual: ProductVisualType;
-  size?: 'sm' | 'lg';
+  size?: 'sm' | 'md' | 'lg';
+  imageUrl?: string;
 }
 
 const visualMeta = {
@@ -13,32 +14,40 @@ const visualMeta = {
   fertilizer: { Icon: Package, bg: '#EFE9DA', fg: colors.primary },
 } as const;
 
-export default function ProductVisual({ visual, size = 'sm' }: ProductVisualProps) {
+const sizeMeta = {
+  sm: { height: 92, iconBox: 48, iconSize: 32, radius: 8, badgeRadius: 14 },
+  md: { height: 120, iconBox: 60, iconSize: 40, radius: 10, badgeRadius: 16 },
+  lg: { height: 210, iconBox: 132, iconSize: 72, radius: 0, badgeRadius: 18 },
+} as const;
+
+export default function ProductVisual({ visual, size = 'sm', imageUrl }: ProductVisualProps) {
   const { Icon, bg, fg } = visualMeta[visual];
+  const { height, iconBox, iconSize, radius, badgeRadius } = sizeMeta[size];
   const isLarge = size === 'lg';
 
   return (
     <div
-      className="flex shrink-0 items-center justify-center overflow-hidden"
-      style={{
-        width: '100%',
-        height: isLarge ? 210 : 92,
-        borderRadius: isLarge ? 0 : 8,
-        background: bg,
-      }}
+      className="shrink-0 overflow-hidden"
+      style={{ width: '100%', height, borderRadius: radius, background: bg }}
     >
-      <div
-        className="flex shrink-0 items-center justify-center"
-        style={{
-          width: isLarge ? 132 : 48,
-          height: isLarge ? 156 : 48,
-          borderRadius: isLarge ? 18 : 14,
-          backgroundColor: isLarge ? '#C9BA74' : 'transparent',
-          boxShadow: isLarge ? 'inset 0 -18px 24px rgba(65, 53, 24, 0.18)' : undefined,
-        }}
-      >
-        <Icon size={isLarge ? 72 : 32} color={isLarge ? colors.white : fg} strokeWidth={1.8} />
-      </div>
+      {imageUrl ? (
+        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <div
+            className="flex shrink-0 items-center justify-center"
+            style={{
+              width: iconBox,
+              height: isLarge ? 156 : iconBox,
+              borderRadius: badgeRadius,
+              backgroundColor: isLarge ? '#C9BA74' : 'transparent',
+              boxShadow: isLarge ? 'inset 0 -18px 24px rgba(65, 53, 24, 0.18)' : undefined,
+            }}
+          >
+            <Icon size={iconSize} color={isLarge ? colors.white : fg} strokeWidth={1.8} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
