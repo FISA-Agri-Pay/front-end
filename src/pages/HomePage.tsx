@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, ChevronRight, Truck } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { colors } from '../styles/colors';
 import logoImg from '../assets/app_logo_title.png';
 import CreditLimitCard, { type CreditStatus } from '../components/CreditLimitCard';
+import { getWalletCredit } from '../api/wallet';
+import type { WalletCredit } from '../types/wallet';
 
 type Product = {
   id: number;
@@ -29,13 +31,51 @@ const deliveries: Delivery[] = [
   { id: 1, itemName: '복합 비료 20kg', status: '배송 중' },
 ];
 
+function toCreditStatus(credit: WalletCredit): CreditStatus {
+  if (credit.hasActiveLimit) return 'completed';
+  const app = credit.applicationStatus;
+  if (app === null) return 'before';
+  if (app === 'REQUESTED' || app === 'PENDING' || app === 'APPROVED') return 'processing';
+  if (app === 'REJECTED' || app === 'CANCELLED') return 'rejected';
+  return 'before';
+}
+
+function CreditCardSkeleton() {
+  return (
+    <div
+      style={{
+        backgroundColor: colors.white,
+        border: '2px solid #E5E0D2',
+        borderRadius: 12,
+        padding: '20px 20px 16px',
+        height: 130,
+      }}
+    >
+      <div style={{ height: 16, width: '60%', backgroundColor: '#E5E0D2', borderRadius: 6, marginBottom: 12 }} />
+      <div style={{ height: 14, width: '80%', backgroundColor: '#EDEBE6', borderRadius: 6, marginBottom: 8 }} />
+      <div style={{ height: 14, width: '50%', backgroundColor: '#EDEBE6', borderRadius: 6 }} />
+    </div>
+  );
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
 
-  const [creditStatus] = useState<CreditStatus>('completed');
-  const userName = '김농부';
-  const creditLimit = 4000000;
-  const creditUsed = 2500000;
+  const [creditStatus, setCreditStatus] = useState<CreditStatus | null>(null);
+  const [creditLimit, setCreditLimit] = useState(0);
+  const [creditUsed, setCreditUsed] = useState(0);
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    getWalletCredit()
+      .then((credit) => {
+        setCreditStatus(toCreditStatus(credit));
+        setCreditLimit(credit.totalLimit);
+        setCreditUsed(credit.usedAmount);
+        setUserName(credit.name);
+      })
+      .catch(() => { setCreditStatus('before'); });
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
@@ -61,7 +101,10 @@ export default function HomePage() {
 
       {/* 외상 한도 카드 */}
       <div style={{ margin: '14px 20px 0' }}>
-        <CreditLimitCard status={creditStatus} userName={userName} limit={creditLimit} used={creditUsed} />
+        {creditStatus === null
+          ? <CreditCardSkeleton />
+          : <CreditLimitCard status={creditStatus} userName={userName} limit={creditLimit} used={creditUsed} />
+        }
       </div>
 
       {/* 추천 기자재 타이틀 */}

@@ -1,3 +1,18 @@
+export type CreditLimitStatus = 'ACTIVE' | 'SUSPENDED' | 'REPAID' | 'EXPIRED' | null;
+export type ApplicationStatus = 'REQUESTED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | null;
+
+export interface WalletCredit {
+  name: string;
+  hasActiveLimit: boolean;
+  creditLimitPublicId: string | null;
+  totalLimit: number;
+  usedAmount: number;
+  remainingAmount: number;
+  usageRate: number;
+  status: CreditLimitStatus;
+  applicationStatus: ApplicationStatus;
+}
+
 export interface WalletPrincipal {
   dueDate: string;
   remainingAmount: number;
