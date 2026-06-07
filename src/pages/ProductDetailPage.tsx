@@ -164,7 +164,6 @@ export default function ProductDetailPage() {
             disabled={isSoldOut}
             onClick={() => {
               addItem(product.productId, snapshot, quantity);
-              navigate('/cart');
             }}
           >
             담기
