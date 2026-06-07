@@ -53,16 +53,16 @@ export default function CartPage() {
         ) : (
           <>
             <div className="flex flex-col gap-3">
-              {lines.map(({ product, quantity, lineTotal }) => (
+              {lines.map(({ productId, snapshot, quantity, lineTotal }) => (
                 <article
-                  key={product.id}
+                  key={productId}
                   className="rounded-[14px] bg-white p-4"
                   style={{ border: '1px solid #E5E0D2' }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-extrabold leading-5" style={{ color: colors.text.dark }}>
-                        {product.name} ({product.tag})
+                        {snapshot.name} ({snapshot.tag})
                       </p>
                       <p className="mt-3 text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
                         {lineTotal.toLocaleString()}원
@@ -70,19 +70,19 @@ export default function CartPage() {
                     </div>
                     <button
                       type="button"
-                      aria-label={`${product.name} 삭제`}
-                      onClick={() => removeItem(product.id)}
+                      aria-label={`${snapshot.name} 삭제`}
+                      onClick={() => removeItem(productId)}
                       className="flex h-8 w-8 items-center justify-center"
                     >
                       <X size={20} color={colors.text.muted} />
                     </button>
                   </div>
                   <div className="mt-3 grid grid-cols-[92px_1fr] gap-4">
-                    <ProductVisual visual={product.visual} />
+                    <ProductVisual visual={snapshot.visual} />
                     <div className="self-end">
                       <QuantityStepper
                         value={quantity}
-                        onChange={(nextQuantity) => updateQuantity(product.id, nextQuantity)}
+                        onChange={(nextQuantity) => updateQuantity(productId, nextQuantity)}
                       />
                     </div>
                   </div>

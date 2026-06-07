@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import ProductVisual from '../components/shop/ProductVisual';
 import { colors } from '../styles/colors';
-import { SHOP_CATEGORIES, SHOP_PRODUCTS, type ShopCategory } from '../data/shop';
+import type { ProductVisual as ProductVisualType } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
+import { fetchCategories, fetchProducts } from '../api/shop';
+import type { ApiCategory, ApiProduct } from '../api/shop';
+
+function categoryToVisual(categoryName: string): ProductVisualType {
+  if (categoryName.includes('비료') || categoryName.includes('자재')) return 'fertilizer';
+  if (categoryName.includes('씨앗') || categoryName.includes('모종')) return 'seedling';
+  return 'service';
+}
 
 export default function ShopPage() {
   const navigate = useNavigate();
@@ -13,14 +21,32 @@ export default function ShopPage() {
   const items = useCartStore((state) => state.items);
   const cartLines = selectCartLines(items);
   const cartCount = cartLines.reduce((sum, line) => sum + line.quantity, 0);
-  const [selectedCategory, setSelectedCategory] = useState<ShopCategory>('전체');
-  const [searchQuery, setSearchQuery] = useState('');
 
-  const filtered = SHOP_PRODUCTS.filter((p) => {
-    const matchesCategory = selectedCategory === '전체' || p.category === selectedCategory;
-    const matchesSearch = p.name.includes(searchQuery);
-    return matchesCategory && matchesSearch;
-  });
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    fetchCategories().then(setCategories).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(true);
+      setError(false);
+      fetchProducts({
+        categoryId: selectedCategoryId ?? undefined,
+        keyword: searchQuery || undefined,
+      })
+        .then(setProducts)
+        .catch(() => setError(true))
+        .finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCategoryId]);
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
@@ -66,19 +92,31 @@ export default function ShopPage() {
       {/* 카테고리 탭 */}
       <div className="bg-white border-b px-5 pb-3" style={{ borderColor: colors.subGreen }}>
         <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {SHOP_CATEGORIES.map((cat) => (
+          <button
+            type="button"
+            onClick={() => setSelectedCategoryId(null)}
+            className="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap"
+            style={
+              selectedCategoryId === null
+                ? { backgroundColor: colors.primary, color: colors.white }
+                : { backgroundColor: colors.subGreen, color: colors.primary }
+            }
+          >
+            전체
+          </button>
+          {categories.map((cat) => (
             <button
-              key={cat}
+              key={cat.categoryId}
               type="button"
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategoryId(cat.categoryId)}
               className="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap"
               style={
-                selectedCategory === cat
+                selectedCategoryId === cat.categoryId
                   ? { backgroundColor: colors.primary, color: colors.white }
                   : { backgroundColor: colors.subGreen, color: colors.primary }
               }
             >
-              {cat}
+              {cat.name}
             </button>
           ))}
         </div>
@@ -86,7 +124,23 @@ export default function ShopPage() {
 
       {/* 상품 그리드 */}
       <div className="flex-1 px-4 pt-4 pb-28">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl overflow-hidden animate-pulse"
+                style={{ height: 220, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}
+              />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <p className="text-sm" style={{ color: colors.text.muted }}>
+              상품을 불러오지 못했습니다. 다시 시도해 주세요.
+            </p>
+          </div>
+        ) : products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <span className="text-4xl mb-3">🔍</span>
             <p className="text-sm" style={{ color: colors.text.muted }}>
@@ -95,22 +149,22 @@ export default function ShopPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {filtered.map((p) => (
+            {products.map((p) => (
               <div
-                key={p.id}
+                key={p.productId}
                 className="bg-white rounded-2xl overflow-hidden"
                 style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}
               >
                 <button
                   type="button"
                   className="w-full text-left px-4 pt-4 pb-2"
-                  onClick={() => navigate(`/product-detail/${p.id}`)}
+                  onClick={() => navigate(`/product-detail/${p.productId}`)}
                 >
                   <div className="w-full rounded-xl overflow-hidden mb-3">
-                    <ProductVisual visual={p.visual} size="md" imageUrl={p.imageUrl} />
+                    <ProductVisual visual={categoryToVisual(p.categoryName)} size="md" />
                   </div>
                   <p className="text-xs mb-0.5" style={{ color: colors.text.muted }}>
-                    {p.category}
+                    {p.categoryName}
                   </p>
                   <p className="text-sm font-bold leading-snug mb-1" style={{ color: colors.text.dark }}>
                     {p.name}
@@ -124,7 +178,16 @@ export default function ShopPage() {
                     type="button"
                     className="w-full py-2 rounded-xl text-sm font-semibold text-white"
                     style={{ backgroundColor: colors.primary }}
-                    onClick={() => addItem(p.id)}
+                    onClick={() =>
+                      addItem(p.productId, {
+                        name: p.name,
+                        price: p.price,
+                        categoryName: p.categoryName,
+                        unit: p.unit,
+                        visual: categoryToVisual(p.categoryName),
+                        tag: p.unit,
+                      })
+                    }
                   >
                     담기
                   </button>

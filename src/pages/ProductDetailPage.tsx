@@ -105,7 +105,7 @@ export default function ProductDetailPage() {
           <Button
             variant="outline"
             onClick={() => {
-              addItem(product.id, quantity);
+              addItem(String(product.id), { name: product.name, price: product.price, categoryName: product.category, unit: product.unit, visual: product.visual, tag: product.tag }, quantity);
               navigate('/cart');
             }}
           >
@@ -113,7 +113,7 @@ export default function ProductDetailPage() {
           </Button>
           <Button
             onClick={() => {
-              replaceWithItem(product.id, quantity);
+              replaceWithItem(String(product.id), { name: product.name, price: product.price, categoryName: product.category, unit: product.unit, visual: product.visual, tag: product.tag }, quantity);
               navigate('/cart');
             }}
           >

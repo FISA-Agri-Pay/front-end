@@ -1,4 +1,4 @@
-import { Leaf, Package, Sprout } from 'lucide-react';
+import { FlaskConical, Sprout, Tractor } from 'lucide-react';
 import { colors } from '../../styles/colors';
 import type { ProductVisual as ProductVisualType } from '../../data/shop';
 
@@ -9,9 +9,9 @@ interface ProductVisualProps {
 }
 
 const visualMeta = {
-  service: { Icon: Leaf, bg: '#EFE9DA', fg: '#7B745D' },
+  service: { Icon: Tractor, bg: '#E8EFF5', fg: '#4A6E8A' },
   seedling: { Icon: Sprout, bg: '#F0ECE1', fg: '#7A6D52' },
-  fertilizer: { Icon: Package, bg: '#EFE9DA', fg: colors.primary },
+  fertilizer: { Icon: FlaskConical, bg: '#EAF2E8', fg: colors.primary },
 } as const;
 
 const sizeMeta = {
