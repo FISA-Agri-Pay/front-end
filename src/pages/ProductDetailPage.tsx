@@ -180,13 +180,16 @@ export default function ProductDetailPage() {
             {product.description}
           </p>
         </div>
+
+        <div className="mt-5">
+          <QuantityStepper value={quantity} onChange={setQuantity} />
+        </div>
       </main>
 
       <footer
         className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 flex-col gap-3 bg-white px-5 py-4"
         style={{ borderTop: '1px solid #E5E0D2' }}
       >
-        <QuantityStepper value={quantity} onChange={setQuantity} />
         <div className="grid grid-cols-[72px_1fr] gap-2">
           <Button
             variant="outline"
