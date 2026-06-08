@@ -15,6 +15,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/shop-proxy/, ''),
       },
+      '/auth-proxy': {
+        target: 'http://localhost:8091',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/auth-proxy/, ''),
+      },
+      '/core-proxy': {
+        target: 'http://localhost:8090',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/core-proxy/, ''),
+      },
     },
   },
 })
