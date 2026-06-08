@@ -56,3 +56,7 @@ export async function updateCartItemQuantity(cartItemId: number, quantity: numbe
   });
   return data.data;
 }
+
+export async function deleteCartItem(cartItemId: number): Promise<void> {
+  await cartClient.delete(ENDPOINTS.CART_ITEM(cartItemId));
+}

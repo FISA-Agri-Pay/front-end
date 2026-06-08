@@ -10,7 +10,7 @@ import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
 import { CREDIT_LIMIT, DELIVERY_DESTINATION } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
-import { fetchCart, categoryToVisual, updateCartItemQuantity } from '../api/cart';
+import { fetchCart, categoryToVisual, updateCartItemQuantity, deleteCartItem } from '../api/cart';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -133,7 +133,14 @@ export default function CartPage() {
                     <button
                       type="button"
                       aria-label={`${snapshot.name} 삭제`}
-                      onClick={() => removeItem(productId)}
+                      onClick={() => {
+                        removeItem(productId);
+                        if (cartItemId !== undefined) {
+                          deleteCartItem(cartItemId).catch(() => {
+                            loadCart();
+                          });
+                        }
+                      }}
                       className="flex h-8 w-8 items-center justify-center"
                     >
                       <X size={20} color={colors.text.muted} />
