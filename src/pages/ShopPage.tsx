@@ -4,17 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import ProductVisual from '../components/shop/ProductVisual';
 import { colors } from '../styles/colors';
-import type { ProductVisual as ProductVisualType } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchCategories, fetchProducts } from '../api/shop';
 import type { ApiCategory, ApiProduct } from '../api/shop';
-import { addToCart } from '../api/cart';
-
-function categoryToVisual(categoryName: string): ProductVisualType {
-  if (categoryName.includes('비료') || categoryName.includes('자재')) return 'fertilizer';
-  if (categoryName.includes('씨앗') || categoryName.includes('모종')) return 'seedling';
-  return 'service';
-}
+import { addToCart, categoryToVisual } from '../api/cart';
 
 export default function ShopPage() {
   const navigate = useNavigate();

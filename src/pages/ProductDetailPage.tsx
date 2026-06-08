@@ -5,18 +5,11 @@ import Button from '../components/Button';
 import ProductVisual from '../components/shop/ProductVisual';
 import QuantityStepper from '../components/shop/QuantityStepper';
 import { colors } from '../styles/colors';
-import type { ProductVisual as ProductVisualType } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchProductDetail } from '../api/shop';
 import type { ApiProductDetail } from '../api/shop';
 import { getWalletCredit } from '../api/wallet';
-import { addToCart } from '../api/cart';
-
-function categoryToVisual(categoryName: string): ProductVisualType {
-  if (categoryName.includes('비료') || categoryName.includes('자재')) return 'fertilizer';
-  if (categoryName.includes('씨앗') || categoryName.includes('모종')) return 'seedling';
-  return 'service';
-}
+import { addToCart, categoryToVisual } from '../api/cart';
 
 export default function ProductDetailPage() {
   const navigate = useNavigate();
