@@ -196,8 +196,21 @@ export default function ProductDetailPage() {
             {isAdding ? '담는 중...' : '담기'}
           </Button>
           <Button
-            disabled={isSoldOut || isAdding}
-            onClick={() => handleAddToCart(() => navigate('/cart'))}
+            disabled={isSoldOut}
+            onClick={() =>
+              navigate('/checkout-direct', {
+                state: {
+                  productName: product.name,
+                  unitPrice: product.price,
+                  quantity,
+                  totalAmount,
+                  visual,
+                  categoryName: product.categoryName,
+                  unit: product.unit,
+                  tag: product.unit,
+                },
+              })
+            }
           >
             {totalAmount.toLocaleString()}원 외상으로 바로 구매
           </Button>
