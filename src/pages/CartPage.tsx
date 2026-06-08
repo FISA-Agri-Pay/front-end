@@ -134,12 +134,13 @@ export default function CartPage() {
                       type="button"
                       aria-label={`${snapshot.name} 삭제`}
                       onClick={() => {
-                        removeItem(productId);
-                        if (cartItemId !== undefined) {
-                          deleteCartItem(cartItemId).catch(() => {
-                            loadCart();
-                          });
+                        if (cartItemId === undefined) {
+                          console.error('cartItemId missing, resyncing from server');
+                          loadCart();
+                          return;
                         }
+                        removeItem(productId);
+                        deleteCartItem(cartItemId).catch(() => loadCart());
                       }}
                       className="flex h-8 w-8 items-center justify-center"
                     >
