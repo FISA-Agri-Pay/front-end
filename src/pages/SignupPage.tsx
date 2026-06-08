@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { AxiosError } from 'axios';
 import SignupAgree from '../components/signup/SignupAgree';
@@ -80,6 +80,9 @@ function getStepFromPath(pathname: string): SignupStep {
 }
 
 function hasCompletedPreviousSteps(step: SignupStep, formData: SignupFormData, registerCompleted: boolean) {
+  // 회원가입 완료 후에는 어떤 step이든 가드 통과 (formData 초기화로 인한 튕김 방지)
+  if (registerCompleted) return true;
+
   const requiredAgreementsDone =
     formData.agreements.age &&
     formData.agreements.service &&
@@ -192,7 +195,7 @@ export default function SignupPage() {
   const [formData, setFormData] = useState<SignupFormData>(INITIAL_FORM);
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [registerError, setRegisterError] = useState('');
-  const [registerCompleted, setRegisterCompleted] = useState(false);
+  const registerCompletedRef = useRef(false);
   const currentDetail = selectedDetail?.pathname === location.pathname ? selectedDetail : null;
 
   const registerMutation = useRegister();
@@ -315,8 +318,9 @@ export default function SignupPage() {
     try {
       await registerMutation.mutateAsync(payload);
 
-      // complete 가드 통과를 먼저 확보한 뒤 민감 정보 초기화
-      setRegisterCompleted(true);
+      // useRef는 즉시 반영되므로 navigate 직전에 설정하면 다음 렌더에서 바로 true로 읽힘
+      registerCompletedRef.current = true;
+      navigate(STEP_PATHS.complete);
       setFormData((prev) => ({
         ...prev,
         idCard: { ...prev.idCard, residentBackDigits: '' },
@@ -330,7 +334,6 @@ export default function SignupPage() {
         },
       }));
       setRegisterError('');
-      goStep('complete');
     } catch (err) {
       const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
       setRegisterError(msg);
@@ -360,8 +363,18 @@ export default function SignupPage() {
     );
   }
 
-  if (!hasCompletedPreviousSteps(step, formData, registerCompleted)) {
+  if (!hasCompletedPreviousSteps(step, formData, registerCompletedRef.current)) {
     return <Navigate to={STEP_PATHS.agree} replace />;
+  }
+
+  // 가드 통과 후 등록 완료 상태면 URL/step과 무관하게 바로 완료 화면 반환
+  if (registerCompletedRef.current) {
+    return (
+      <SignupComplete
+        onGoHome={() => navigate('/home')}
+        onGoLogin={() => navigate('/login')}
+      />
+    );
   }
 
   switch (step) {
