@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 import SignupAgree from '../components/signup/SignupAgree';
 import SignupAgreementDetail from '../components/signup/SignupAgreementDetail';
 import SignupComplete from '../components/signup/SignupComplete';
@@ -20,6 +21,9 @@ import {
   PHONE_TERM_DETAILS,
   type PhoneTermKey,
 } from '../constants/signupPhoneTerms';
+import { useRegister } from '../hooks/useAuth';
+import type { RegisterRequest } from '../types/auth';
+import type { ApiResponse } from '../types/credit';
 
 type SignupStep =
   | 'agree'
@@ -75,7 +79,7 @@ function getStepFromPath(pathname: string): SignupStep {
   return (matchedStep as SignupStep | undefined) ?? 'agree';
 }
 
-function hasCompletedPreviousSteps(step: SignupStep, formData: SignupFormData) {
+function hasCompletedPreviousSteps(step: SignupStep, formData: SignupFormData, registerCompleted: boolean) {
   const requiredAgreementsDone =
     formData.agreements.age &&
     formData.agreements.service &&
@@ -90,7 +94,8 @@ function hasCompletedPreviousSteps(step: SignupStep, formData: SignupFormData) {
   const phoneCodeDone = formData.phoneAuth.code.length === 6;
   const idCardDone =
     formData.idCard.issuedDate.length === 8 &&
-    formData.idCard.address.trim().length > 0;
+    formData.idCard.address.trim().length > 0 &&
+    formData.idCard.residentBackDigits.length === 6; // 뒷자리 나머지 6자리 완성 확인
   const loginPasswordDone =
     formData.account.password.length >= 8 &&
     formData.account.password === formData.account.passwordConfirm;
@@ -131,16 +136,7 @@ function hasCompletedPreviousSteps(step: SignupStep, formData: SignupFormData) {
         paymentPinDone
       );
     case 'complete':
-      return (
-        requiredAgreementsDone &&
-        phoneInfoDone &&
-        phoneTermsDone &&
-        phoneCodeDone &&
-        idCardDone &&
-        loginPasswordDone &&
-        paymentPinDone &&
-        formData.account.paymentPinConfirm === formData.account.paymentPin
-      );
+      return registerCompleted;
   }
 }
 
@@ -171,6 +167,7 @@ const INITIAL_FORM: SignupFormData = {
     issuedDate: '',
     address: '',
     zonecode: '',
+    residentBackDigits: '',
   },
   account: {
     password: '',
@@ -181,13 +178,24 @@ const INITIAL_FORM: SignupFormData = {
   },
 };
 
+function formatRegisterError(error: AxiosError<ApiResponse<null>>): string {
+  const status = error.response?.status;
+  if (status === 409) return '이미 가입된 사용자입니다.';
+  if (status === 400) return '입력 정보를 다시 확인해 주세요.';
+  return error.response?.data?.message ?? '회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.';
+}
+
 export default function SignupPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const step = getStepFromPath(location.pathname);
   const [formData, setFormData] = useState<SignupFormData>(INITIAL_FORM);
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
+  const [registerError, setRegisterError] = useState('');
+  const [registerCompleted, setRegisterCompleted] = useState(false);
   const currentDetail = selectedDetail?.pathname === location.pathname ? selectedDetail : null;
+
+  const registerMutation = useRegister();
 
   const goStep = (nextStep: SignupStep) => {
     setSelectedDetail(null);
@@ -197,17 +205,13 @@ export default function SignupPage() {
   const toggleAgreement = (key: AgreementKey) => {
     setFormData((prev) => ({
       ...prev,
-      agreements: {
-        ...prev.agreements,
-        [key]: !prev.agreements[key],
-      },
+      agreements: { ...prev.agreements, [key]: !prev.agreements[key] },
     }));
   };
 
   const toggleAllAgreements = () => {
     setFormData((prev) => {
       const shouldCheckAll = Object.values(prev.agreements).some((checked) => !checked);
-
       return {
         ...prev,
         agreements: {
@@ -224,10 +228,7 @@ export default function SignupPage() {
   const agreeDetail = (key: AgreementDetailKey) => {
     setFormData((prev) => ({
       ...prev,
-      agreements: {
-        ...prev.agreements,
-        [key]: true,
-      },
+      agreements: { ...prev.agreements, [key]: true },
     }));
     setSelectedDetail(null);
   };
@@ -235,10 +236,7 @@ export default function SignupPage() {
   const updatePhoneAuth = (partial: Partial<PhoneAuthInfo>) => {
     setFormData((prev) => ({
       ...prev,
-      phoneAuth: {
-        ...prev.phoneAuth,
-        ...partial,
-      },
+      phoneAuth: { ...prev.phoneAuth, ...partial },
     }));
   };
 
@@ -247,10 +245,7 @@ export default function SignupPage() {
       ...prev,
       phoneAuth: {
         ...prev.phoneAuth,
-        terms: {
-          ...prev.phoneAuth.terms,
-          [key]: !prev.phoneAuth.terms[key],
-        },
+        terms: { ...prev.phoneAuth.terms, [key]: !prev.phoneAuth.terms[key] },
       },
     }));
   };
@@ -260,12 +255,7 @@ export default function SignupPage() {
       ...prev,
       phoneAuth: {
         ...prev.phoneAuth,
-        terms: {
-          service: true,
-          privacy: true,
-          uniqueId: true,
-          identity: true,
-        },
+        terms: { service: true, privacy: true, uniqueId: true, identity: true },
       },
     }));
   };
@@ -275,10 +265,7 @@ export default function SignupPage() {
       ...prev,
       phoneAuth: {
         ...prev.phoneAuth,
-        terms: {
-          ...prev.phoneAuth.terms,
-          [key]: true,
-        },
+        terms: { ...prev.phoneAuth.terms, [key]: true },
       },
     }));
     setSelectedDetail(null);
@@ -287,31 +274,69 @@ export default function SignupPage() {
   const updatePhoneCode = (code: string) => {
     setFormData((prev) => ({
       ...prev,
-      phoneAuth: {
-        ...prev.phoneAuth,
-        code,
-      },
+      phoneAuth: { ...prev.phoneAuth, code },
     }));
   };
 
   const updateIdCard = (partial: Partial<IdCardInfo>) => {
     setFormData((prev) => ({
       ...prev,
-      idCard: {
-        ...prev.idCard,
-        ...partial,
-      },
+      idCard: { ...prev.idCard, ...partial },
     }));
   };
 
   const updateAccount = (partial: Partial<SignupFormData['account']>) => {
     setFormData((prev) => ({
       ...prev,
-      account: {
-        ...prev.account,
-        ...partial,
-      },
+      account: { ...prev.account, ...partial },
     }));
+  };
+
+  // PIN 확인 완료 → register API 호출
+  const handlePinConfirmComplete = async (confirmedPin: string) => {
+    if (confirmedPin !== formData.account.paymentPin) {
+      updateAccount({
+        paymentPinConfirm: '',
+        paymentPinError: '비밀번호가 일치하지 않습니다. 다시 입력해 주세요.',
+      });
+      return;
+    }
+
+    // residentId = 앞자리 6자리 - 성별코드(1자리) + 나머지(6자리) = 6자리-7자리
+    const payload: RegisterRequest = {
+      phone: formData.phoneAuth.phoneNumber,
+      name: formData.phoneAuth.name,
+      address: formData.idCard.address,
+      zipCode: formData.idCard.zonecode,
+      residentId: `${formData.phoneAuth.birthDate}-${formData.phoneAuth.residentFirstDigit}${formData.idCard.residentBackDigits}`,
+      password: formData.account.password,
+    };
+
+    try {
+      await registerMutation.mutateAsync(payload);
+
+      // complete 가드 통과를 먼저 확보한 뒤 민감 정보 초기화
+      setRegisterCompleted(true);
+      setFormData((prev) => ({
+        ...prev,
+        idCard: { ...prev.idCard, residentBackDigits: '' },
+        account: {
+          ...prev.account,
+          password: '',
+          passwordConfirm: '',
+          paymentPin: '',
+          paymentPinConfirm: '',
+          paymentPinError: '',
+        },
+      }));
+      setRegisterError('');
+      goStep('complete');
+    } catch (err) {
+      const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
+      setRegisterError(msg);
+      // PIN 입력값 초기화 (재시도 가능하게), 앞 단계 정보는 유지
+      updateAccount({ paymentPinConfirm: '', paymentPinError: '' });
+    }
   };
 
   if (currentDetail) {
@@ -335,7 +360,7 @@ export default function SignupPage() {
     );
   }
 
-  if (!hasCompletedPreviousSteps(step, formData)) {
+  if (!hasCompletedPreviousSteps(step, formData, registerCompleted)) {
     return <Navigate to={STEP_PATHS.agree} replace />;
   }
 
@@ -346,7 +371,9 @@ export default function SignupPage() {
           agreements={formData.agreements}
           onToggle={toggleAgreement}
           onToggleAll={toggleAllAgreements}
-          onOpenDetail={(key) => setSelectedDetail({ type: 'signup', key, pathname: location.pathname })}
+          onOpenDetail={(key) =>
+            setSelectedDetail({ type: 'signup', key, pathname: location.pathname })
+          }
           onNext={() => goStep('phone-info')}
           onBack={() => navigate('/login')}
         />
@@ -366,7 +393,9 @@ export default function SignupPage() {
           terms={formData.phoneAuth.terms}
           onToggle={togglePhoneTerm}
           onAgreeAll={agreeAllPhoneTerms}
-          onOpenDetail={(key) => setSelectedDetail({ type: 'phone', key, pathname: location.pathname })}
+          onOpenDetail={(key) =>
+            setSelectedDetail({ type: 'phone', key, pathname: location.pathname })
+          }
           onNext={() => goStep('phone-code')}
           onBack={() => goStep('phone-info')}
         />
@@ -437,19 +466,13 @@ export default function SignupPage() {
           title="확인을 위해"
           description="한 번 더 입력해 주세요."
           pin={formData.account.paymentPinConfirm}
-          errorMessage={formData.account.paymentPinError}
-          onChange={(paymentPinConfirm) => updateAccount({ paymentPinConfirm, paymentPinError: '' })}
-          onComplete={(paymentPinConfirm) => {
-            if (paymentPinConfirm === formData.account.paymentPin) {
-              goStep('complete');
-              return;
-            }
-
-            updateAccount({
-              paymentPinConfirm: '',
-              paymentPinError: '비밀번호가 일치하지 않습니다. 다시 입력해 주세요.',
-            });
+          errorMessage={registerError || formData.account.paymentPinError}
+          disabled={registerMutation.isPending}
+          onChange={(paymentPinConfirm) => {
+            if (registerError) setRegisterError('');
+            updateAccount({ paymentPinConfirm, paymentPinError: '' });
           }}
+          onComplete={handlePinConfirmComplete}
           onBack={() => goStep('payment-pin')}
         />
       );
