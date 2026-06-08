@@ -4,20 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import ProductVisual from '../components/shop/ProductVisual';
 import { colors } from '../styles/colors';
-import type { ProductVisual as ProductVisualType } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchCategories, fetchProducts } from '../api/shop';
 import type { ApiCategory, ApiProduct } from '../api/shop';
-
-function categoryToVisual(categoryName: string): ProductVisualType {
-  if (categoryName.includes('비료') || categoryName.includes('자재')) return 'fertilizer';
-  if (categoryName.includes('씨앗') || categoryName.includes('모종')) return 'seedling';
-  return 'service';
-}
+import { addToCart, categoryToVisual } from '../api/cart';
 
 export default function ShopPage() {
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
   const items = useCartStore((state) => state.items);
   const cartLines = selectCartLines(items);
   const cartCount = cartLines.reduce((sum, line) => sum + line.quantity, 0);
@@ -28,6 +23,31 @@ export default function ShopPage() {
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
+
+  const handleAddToCart = (p: ApiProduct) => {
+    if (addingIds.has(p.productId)) return;
+    setAddingIds((prev) => new Set(prev).add(p.productId));
+    addToCart(p.productId, 1)
+      .then((result) => {
+        const snapshot = {
+          name: p.name,
+          price: p.price,
+          categoryName: p.categoryName,
+          unit: p.unit,
+          visual: categoryToVisual(p.categoryName),
+          tag: p.unit,
+        };
+        const isInStore = useCartStore.getState().items.some((i) => i.productId === p.productId);
+        if (isInStore) {
+          updateQuantity(p.productId, result.quantity);
+        } else {
+          addItem(p.productId, snapshot, result.quantity, result.cartItemId);
+        }
+      })
+      .catch(() => alert('담기에 실패했습니다. 다시 시도해 주세요.'))
+      .finally(() => setAddingIds((prev) => { const next = new Set(prev); next.delete(p.productId); return next; }));
+  };
 
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => {});
@@ -178,19 +198,11 @@ export default function ShopPage() {
                   <button
                     type="button"
                     className="w-full py-2 rounded-xl text-sm font-semibold text-white"
-                    style={{ backgroundColor: colors.primary }}
-                    onClick={() =>
-                      addItem(p.productId, {
-                        name: p.name,
-                        price: p.price,
-                        categoryName: p.categoryName,
-                        unit: p.unit,
-                        visual: categoryToVisual(p.categoryName),
-                        tag: p.unit,
-                      })
-                    }
+                    style={{ backgroundColor: colors.primary, opacity: addingIds.has(p.productId) ? 0.6 : 1 }}
+                    disabled={addingIds.has(p.productId)}
+                    onClick={() => handleAddToCart(p)}
                   >
-                    담기
+                    {addingIds.has(p.productId) ? '담는 중...' : '담기'}
                   </button>
                 </div>
               </div>

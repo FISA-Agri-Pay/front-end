@@ -11,12 +11,14 @@ export interface ProductSnapshot {
 }
 
 interface CartItem {
+  cartItemId?: number;
   productId: string;
   quantity: number;
   snapshot: ProductSnapshot;
 }
 
 export interface CartLine {
+  cartItemId?: number;
   productId: string;
   snapshot: ProductSnapshot;
   quantity: number;
@@ -25,11 +27,12 @@ export interface CartLine {
 
 interface CartState {
   items: CartItem[];
-  addItem: (productId: string, snapshot: ProductSnapshot, quantity?: number) => void;
+  addItem: (productId: string, snapshot: ProductSnapshot, quantity?: number, cartItemId?: number) => void;
   replaceWithItem: (productId: string, snapshot: ProductSnapshot, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  syncFromServer: (serverItems: CartItem[]) => void;
 }
 
 const MIN_QUANTITY = 1;
@@ -40,19 +43,19 @@ const clampQuantity = (quantity: number) =>
 
 export const useCartStore = create<CartState>((set) => ({
   items: [],
-  addItem: (productId, snapshot, quantity = 1) =>
+  addItem: (productId, snapshot, quantity = 1, cartItemId?) =>
     set((state) => {
       const safeQuantity = clampQuantity(quantity);
       const existingItem = state.items.find((item) => item.productId === productId);
 
       if (!existingItem) {
-        return { items: [...state.items, { productId, snapshot, quantity: safeQuantity }] };
+        return { items: [...state.items, { cartItemId, productId, snapshot, quantity: safeQuantity }] };
       }
 
       return {
         items: state.items.map((item) =>
           item.productId === productId
-            ? { ...item, snapshot, quantity: clampQuantity(item.quantity + safeQuantity) }
+            ? { ...item, cartItemId: cartItemId ?? item.cartItemId, snapshot, quantity: clampQuantity(item.quantity + safeQuantity) }
             : item,
         ),
       };
@@ -70,10 +73,12 @@ export const useCartStore = create<CartState>((set) => ({
       ),
     })),
   clearCart: () => set({ items: [] }),
+  syncFromServer: (serverItems) => set({ items: serverItems }),
 }));
 
 export function selectCartLines(items: ReturnType<typeof useCartStore.getState>['items']): CartLine[] {
   return items.map((item) => ({
+    cartItemId: item.cartItemId,
     productId: item.productId,
     snapshot: item.snapshot,
     quantity: item.quantity,

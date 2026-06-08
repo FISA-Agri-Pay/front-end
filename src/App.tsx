@@ -11,6 +11,7 @@ import SignupPage from './pages/SignupPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
+import DirectCheckoutPage from './pages/DirectCheckoutPage';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
               <Route path="/product-detail/:productId" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
+              <Route path="/checkout-direct" element={<DirectCheckoutPage />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/mypage" element={<MyPage />} />
               <Route path="/wallet" element={<Wallet />} />
