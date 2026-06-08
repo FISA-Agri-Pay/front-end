@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
+import { Lightbulb, MapPin } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import Button from '../components/Button';
 import ProductVisual from '../components/shop/ProductVisual';
@@ -101,7 +101,8 @@ export default function DirectCheckoutPage() {
             결제 및 한도 정보
           </h2>
           <CreditSummaryCard limit={CREDIT_LIMIT} paymentAmount={totalAmount} />
-          <p className="mt-3 px-2 text-[12px]" style={{ color: colors.text.muted }}>
+          <p className="mt-3 flex items-center justify-center gap-1 text-[12px]" style={{ color: colors.text.muted }}>
+            <Lightbulb size={13} />
             외상 대금은 다음 상환일에 맞춰 납부해 주세요.
           </p>
         </section>

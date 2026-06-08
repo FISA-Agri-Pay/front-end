@@ -27,8 +27,7 @@ export default function CreditSummaryCard({ limit, paymentAmount }: CreditSummar
           {limit.toLocaleString()}원
         </span>
       </div>
-      <div className="my-3 border-t border-dashed" style={{ borderColor: '#E5E0D2' }} />
-      <div className="flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between">
         <span className="text-[13px] font-bold" style={{ color: colors.text.danger }}>
           총 주문 금액
         </span>
@@ -36,7 +35,8 @@ export default function CreditSummaryCard({ limit, paymentAmount }: CreditSummar
           - {paymentAmount.toLocaleString()}원
         </span>
       </div>
-      <div className="mt-4 flex items-center justify-between">
+      <div className="my-3 border-t border-dashed" style={{ borderColor: '#E5E0D2' }} />
+      <div className="flex items-center justify-between">
         <span className="text-[15px] font-extrabold" style={{ color: colors.primary }}>
           결제 후 남은 한도
         </span>
