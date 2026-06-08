@@ -10,7 +10,7 @@ import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
 import { CREDIT_LIMIT, DELIVERY_DESTINATION } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
-import { fetchCart, categoryToVisual } from '../api/cart';
+import { fetchCart, categoryToVisual, updateCartItemQuantity } from '../api/cart';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -34,6 +34,7 @@ export default function CartPage() {
       .then((cartData) => {
         syncFromServer(
           cartData.items.map((item) => ({
+            cartItemId: item.cartItemId,
             productId: item.productId,
             quantity: item.quantity,
             snapshot: {
@@ -114,7 +115,7 @@ export default function CartPage() {
         ) : (
           <>
             <div className="flex flex-col gap-3">
-              {lines.map(({ productId, snapshot, quantity, lineTotal }) => (
+              {lines.map(({ cartItemId, productId, snapshot, quantity, lineTotal }) => (
                 <article
                   key={productId}
                   className="rounded-[14px] bg-white p-4"
@@ -143,7 +144,15 @@ export default function CartPage() {
                     <div className="self-end">
                       <QuantityStepper
                         value={quantity}
-                        onChange={(nextQuantity) => updateQuantity(productId, nextQuantity)}
+                        onChange={(nextQuantity) => {
+                          updateQuantity(productId, nextQuantity);
+                          if (cartItemId !== undefined) {
+                            updateCartItemQuantity(cartItemId, nextQuantity).catch(() => {
+                              updateQuantity(productId, quantity);
+                              alert('수량 변경에 실패했습니다. 다시 시도해 주세요.');
+                            });
+                          }
+                        }}
                       />
                     </div>
                   </div>

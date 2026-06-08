@@ -122,7 +122,7 @@ export default function ProductDetailPage() {
         if (isInStore) {
           updateQuantity(product.productId, result.quantity);
         } else {
-          addItem(product.productId, snapshot, result.quantity);
+          addItem(product.productId, snapshot, result.quantity, result.cartItemId);
         }
         onSuccess?.();
       })

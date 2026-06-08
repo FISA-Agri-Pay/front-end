@@ -28,6 +28,7 @@ interface ApiResponse<T> {
 const ENDPOINTS = {
   CART:       '/api/v1/cart',
   CART_ITEMS: '/api/v1/cart/items',
+  CART_ITEM:  (id: number) => `/api/v1/cart/items/${id}`,
 } as const;
 
 export function categoryToVisual(categoryName: string): ProductVisual {
@@ -44,6 +45,13 @@ export async function fetchCart(): Promise<CartApiResponse> {
 export async function addToCart(productId: string, quantity: number): Promise<CartApiItem> {
   const { data } = await cartClient.post<ApiResponse<CartApiItem>>(ENDPOINTS.CART_ITEMS, {
     productId,
+    quantity,
+  });
+  return data.data;
+}
+
+export async function updateCartItemQuantity(cartItemId: number, quantity: number): Promise<CartApiItem> {
+  const { data } = await cartClient.patch<ApiResponse<CartApiItem>>(ENDPOINTS.CART_ITEM(cartItemId), {
     quantity,
   });
   return data.data;

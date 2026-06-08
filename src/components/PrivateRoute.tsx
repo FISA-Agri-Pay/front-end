@@ -12,6 +12,7 @@ export default function PrivateRoute() {
       .then((cartData) => {
         syncFromServer(
           cartData.items.map((item) => ({
+            cartItemId: item.cartItemId,
             productId: item.productId,
             quantity: item.quantity,
             snapshot: {

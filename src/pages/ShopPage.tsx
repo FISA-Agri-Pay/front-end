@@ -49,7 +49,7 @@ export default function ShopPage() {
         if (isInStore) {
           updateQuantity(p.productId, result.quantity);
         } else {
-          addItem(p.productId, snapshot, result.quantity);
+          addItem(p.productId, snapshot, result.quantity, result.cartItemId);
         }
       })
       .catch(() => alert('담기에 실패했습니다. 다시 시도해 주세요.'))
