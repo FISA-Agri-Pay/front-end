@@ -25,6 +25,11 @@ interface ApiResponse<T> {
   message: string;
 }
 
+const ENDPOINTS = {
+  CART:       '/api/v1/cart',
+  CART_ITEMS: '/api/v1/cart/items',
+} as const;
+
 export function categoryToVisual(categoryName: string): ProductVisual {
   if (categoryName.includes('비료') || categoryName.includes('자재')) return 'fertilizer';
   if (categoryName.includes('씨앗') || categoryName.includes('모종')) return 'seedling';
@@ -32,6 +37,14 @@ export function categoryToVisual(categoryName: string): ProductVisual {
 }
 
 export async function fetchCart(): Promise<CartApiResponse> {
-  const { data } = await cartClient.get<ApiResponse<CartApiResponse>>('/api/v1/cart');
+  const { data } = await cartClient.get<ApiResponse<CartApiResponse>>(ENDPOINTS.CART);
+  return data.data;
+}
+
+export async function addToCart(productId: string, quantity: number): Promise<CartApiItem> {
+  const { data } = await cartClient.post<ApiResponse<CartApiItem>>(ENDPOINTS.CART_ITEMS, {
+    productId,
+    quantity,
+  });
   return data.data;
 }

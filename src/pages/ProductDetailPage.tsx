@@ -10,6 +10,7 @@ import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchProductDetail } from '../api/shop';
 import type { ApiProductDetail } from '../api/shop';
 import { getWalletCredit } from '../api/wallet';
+import { addToCart } from '../api/cart';
 
 function categoryToVisual(categoryName: string): ProductVisualType {
   if (categoryName.includes('비료') || categoryName.includes('자재')) return 'fertilizer';
@@ -21,7 +22,7 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const addItem = useCartStore((state) => state.addItem);
-  const replaceWithItem = useCartStore((state) => state.replaceWithItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
   const items = useCartStore((state) => state.items);
   const cartCount = selectCartLines(items).reduce((sum, line) => sum + line.quantity, 0);
   const [quantity, setQuantity] = useState(1);
@@ -29,6 +30,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     if (!productId) { setLoading(false); return; }
@@ -111,6 +113,23 @@ export default function ProductDetailPage() {
     tag: product.unit,
   };
 
+  const handleAddToCart = (onSuccess?: () => void) => {
+    if (isAdding) return;
+    setIsAdding(true);
+    addToCart(product.productId, quantity)
+      .then((result) => {
+        const isInStore = useCartStore.getState().items.some((i) => i.productId === product.productId);
+        if (isInStore) {
+          updateQuantity(product.productId, result.quantity);
+        } else {
+          addItem(product.productId, snapshot, result.quantity);
+        }
+        onSuccess?.();
+      })
+      .catch(() => alert('담기에 실패했습니다. 다시 시도해 주세요.'))
+      .finally(() => setIsAdding(false));
+  };
+
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
       {headerBar}
@@ -171,19 +190,14 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-[72px_1fr] gap-2">
           <Button
             variant="outline"
-            disabled={isSoldOut}
-            onClick={() => {
-              addItem(product.productId, snapshot, quantity);
-            }}
+            disabled={isSoldOut || isAdding}
+            onClick={() => handleAddToCart()}
           >
-            담기
+            {isAdding ? '담는 중...' : '담기'}
           </Button>
           <Button
-            disabled={isSoldOut}
-            onClick={() => {
-              replaceWithItem(product.productId, snapshot, quantity);
-              navigate('/cart');
-            }}
+            disabled={isSoldOut || isAdding}
+            onClick={() => handleAddToCart(() => navigate('/cart'))}
           >
             {totalAmount.toLocaleString()}원 외상으로 바로 구매
           </Button>
