@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, X } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -10,6 +10,7 @@ import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
 import { CREDIT_LIMIT, DELIVERY_DESTINATION } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
+import { fetchCart, categoryToVisual } from '../api/cart';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -17,16 +18,76 @@ export default function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
+  const syncFromServer = useCartStore((state) => state.syncFromServer);
   const lines = useMemo(() => selectCartLines(items), [items]);
   const totalAmount = lines.reduce((sum, line) => sum + line.lineTotal, 0);
   const isOverLimit = totalAmount > CREDIT_LIMIT;
   const [pin, setPin] = useState('');
   const [isPinOpen, setIsPinOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+
+  const loadCart = () => {
+    setIsLoading(true);
+    setFetchError(false);
+    fetchCart()
+      .then((cartData) => {
+        syncFromServer(
+          cartData.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            snapshot: {
+              name: item.productName,
+              price: item.unitPrice,
+              categoryName: item.categoryName,
+              unit: item.unit,
+              visual: categoryToVisual(item.categoryName),
+              tag: '',
+            },
+          })),
+        );
+      })
+      .catch(() => setFetchError(true))
+      .finally(() => setIsLoading(false));
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(loadCart, []);
 
   const openPin = () => {
     setPin('');
     setIsPinOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
+        <PageHeader title="장바구니 및 결제" onBack={() => navigate(-1)} />
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-[14px]" style={{ color: colors.text.muted }}>장바구니를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
+        <PageHeader title="장바구니 및 결제" onBack={() => navigate(-1)} />
+        <div className="flex flex-1 flex-col items-center justify-center gap-3">
+          <p className="text-[14px]" style={{ color: colors.text.muted }}>장바구니를 불러오지 못했습니다.</p>
+          <button
+            type="button"
+            className="h-10 rounded-xl px-5 text-[13px] font-bold text-white"
+            style={{ backgroundColor: colors.primary }}
+            onClick={loadCart}
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col pb-24" style={{ backgroundColor: colors.bg }}>

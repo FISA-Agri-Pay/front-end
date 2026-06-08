@@ -30,6 +30,7 @@ interface CartState {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  syncFromServer: (serverItems: CartItem[]) => void;
 }
 
 const MIN_QUANTITY = 1;
@@ -70,6 +71,7 @@ export const useCartStore = create<CartState>((set) => ({
       ),
     })),
   clearCart: () => set({ items: [] }),
+  syncFromServer: (serverItems) => set({ items: serverItems }),
 }));
 
 export function selectCartLines(items: ReturnType<typeof useCartStore.getState>['items']): CartLine[] {
