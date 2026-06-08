@@ -34,6 +34,7 @@ export default function DirectCheckoutPage() {
   }
 
   const { productName, unitPrice, quantity, totalAmount, visual, categoryName, unit, tag } = state;
+  const isOverLimit = totalAmount > CREDIT_LIMIT;
 
   return (
     <div className="flex min-h-screen flex-col pb-24" style={{ backgroundColor: colors.bg }}>
@@ -112,8 +113,8 @@ export default function DirectCheckoutPage() {
         className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 bg-white px-5 py-4"
         style={{ borderTop: '1px solid #E5E0D2' }}
       >
-        <Button onClick={() => { setPin(''); setIsPinOpen(true); }}>
-          {totalAmount.toLocaleString()}원 외상으로 결제하기
+        <Button onClick={() => { setPin(''); setIsPinOpen(true); }} disabled={isOverLimit}>
+          {isOverLimit ? '외상 한도를 초과했습니다' : `${totalAmount.toLocaleString()}원 외상으로 결제하기`}
         </Button>
       </footer>
 
@@ -124,6 +125,7 @@ export default function DirectCheckoutPage() {
           onChange={setPin}
           onClose={() => setIsPinOpen(false)}
           onComplete={() => {
+            if (isOverLimit) return;
             setIsPinOpen(false);
             navigate('/checkout-success', { state: { totalAmount } });
           }}
