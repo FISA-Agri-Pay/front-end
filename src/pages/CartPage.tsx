@@ -153,13 +153,16 @@ export default function CartPage() {
                       <QuantityStepper
                         value={quantity}
                         onChange={(nextQuantity) => {
-                          updateQuantity(productId, nextQuantity);
-                          if (cartItemId !== undefined) {
-                            updateCartItemQuantity(cartItemId, nextQuantity).catch(() => {
-                              updateQuantity(productId, quantity);
-                              alert('수량 변경에 실패했습니다. 다시 시도해 주세요.');
-                            });
+                          if (cartItemId === undefined) {
+                            console.error('cartItemId missing, resyncing from server');
+                            loadCart();
+                            return;
                           }
+                          updateQuantity(productId, nextQuantity);
+                          updateCartItemQuantity(cartItemId, nextQuantity).catch(() => {
+                            updateQuantity(productId, quantity);
+                            alert('수량 변경에 실패했습니다. 다시 시도해 주세요.');
+                          });
                         }}
                       />
                     </div>
