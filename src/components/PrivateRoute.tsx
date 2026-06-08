@@ -26,7 +26,9 @@ export default function PrivateRoute() {
           })),
         );
       })
-      .catch(() => {});
+      .catch((error) => {
+        console.error('Failed to load cart:', error);
+      });
   }, [syncFromServer]);
 
   if (!tokenStorage.getAccess()) {
