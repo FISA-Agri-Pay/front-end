@@ -17,7 +17,6 @@ pipeline {
                 sh '''
                     test -n "$VITE_API_AUTH_URL"    || (echo "VITE_API_AUTH_URL is required."    && exit 1)
                     test -n "$VITE_API_CORE_URL"    || (echo "VITE_API_CORE_URL is required."    && exit 1)
-                    test -n "$VITE_API_PAYMENT_URL" || (echo "VITE_API_PAYMENT_URL is required." && exit 1)
                     test -n "$VITE_API_SHOP_URL"    || (echo "VITE_API_SHOP_URL is required."    && exit 1)
                     test -n "$VITE_API_CART_URL"    || (echo "VITE_API_CART_URL is required."    && exit 1)
                     test -n "$FRONTEND_S3_BUCKET"   || (echo "FRONTEND_S3_BUCKET is required."   && exit 1)
