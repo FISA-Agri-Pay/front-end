@@ -16,7 +16,7 @@ import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
       <div className="flex justify-center min-h-screen bg-gray-100">
         <div className="w-full max-w-[390px] bg-white min-h-screen shadow-lg relative overflow-x-hidden">
           <Routes>

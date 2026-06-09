@@ -93,7 +93,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
       } catch (refreshError) {
         processQueue(refreshError, null);
         tokenStorage.clear();
-        window.location.replace('/login');
+        window.location.replace(import.meta.env.BASE_URL + 'login');
         return Promise.reject(refreshError);
 
       } finally {
