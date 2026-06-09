@@ -15,10 +15,6 @@ pipeline {
         stage('Validate Environment') {
             steps {
                 sh '''
-                    test -n "$VITE_API_AUTH_URL"    || (echo "VITE_API_AUTH_URL is required."    && exit 1)
-                    test -n "$VITE_API_CORE_URL"    || (echo "VITE_API_CORE_URL is required."    && exit 1)
-                    test -n "$VITE_API_SHOP_URL"    || (echo "VITE_API_SHOP_URL is required."    && exit 1)
-                    test -n "$VITE_API_CART_URL"    || (echo "VITE_API_CART_URL is required."    && exit 1)
                     test -n "$FRONTEND_S3_BUCKET"   || (echo "FRONTEND_S3_BUCKET is required."   && exit 1)
                     test -n "$FRONTEND_S3_PREFIX"   || (echo "FRONTEND_S3_PREFIX is required."   && exit 1)
                     test -n "$AWS_CREDENTIALS_ID"   || (echo "AWS_CREDENTIALS_ID is required."   && exit 1)
