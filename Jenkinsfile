@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         // s3 버킷 이름
-        S3_BUCKET = "kkpp-s3-bucket"
+        S3_BUCKET = "kkpp-s3-bucket/user"
     }
 
     stages {
