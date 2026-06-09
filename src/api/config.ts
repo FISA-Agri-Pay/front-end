@@ -1,6 +1,6 @@
 function envOrDefault(key: string, fallback: string): string {
   const value = import.meta.env[key] as string | undefined;
-  if (value) return value;
+  if (value !== undefined) return value;
   if (import.meta.env.MODE !== 'development') {
     throw new Error(`[config] ${key} is not set`);
   }
