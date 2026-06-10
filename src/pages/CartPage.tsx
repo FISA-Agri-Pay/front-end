@@ -8,10 +8,17 @@ import QuantityStepper from '../components/shop/QuantityStepper';
 import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
-import { CREDIT_LIMIT, DELIVERY_ADDRESS, DELIVERY_DESTINATION } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchCart, categoryToVisual, updateCartItemQuantity, deleteCartItem } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
+import { fetchUserProfile } from '../api/auth';
+import type { UserProfile } from '../api/auth';
+import { getWalletCredit } from '../api/wallet';
+
+const maskPhone = (phone: string) => {
+  const d = phone.replace(/-/g, '');
+  return d.length >= 11 ? `${d.slice(0, 3)}-****-${d.slice(7)}` : phone;
+};
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -22,12 +29,14 @@ export default function CartPage() {
   const syncFromServer = useCartStore((state) => state.syncFromServer);
   const lines = useMemo(() => selectCartLines(items), [items]);
   const totalAmount = lines.reduce((sum, line) => sum + line.lineTotal, 0);
-  const isOverLimit = totalAmount > CREDIT_LIMIT;
   const [pin, setPin] = useState('');
   const [isPinOpen, setIsPinOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
+  const isOverLimit = remainingCredit !== null && totalAmount > remainingCredit;
 
   const loadCart = () => {
     setIsLoading(true);
@@ -57,6 +66,11 @@ export default function CartPage() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(loadCart, []);
+
+  useEffect(() => {
+    fetchUserProfile().then(setUserProfile).catch(() => {});
+    getWalletCredit().then((c) => setRemainingCredit(c.remainingAmount)).catch(() => setRemainingCredit(0));
+  }, []);
 
   const openPin = () => {
     setPin('');
@@ -185,10 +199,10 @@ export default function CartPage() {
                 <MapPin size={20} color={colors.primary} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-extrabold" style={{ color: colors.text.dark }}>
-                    {DELIVERY_DESTINATION.title}
+                    {userProfile?.address ?? '-'}
                   </p>
                   <p className="mt-1 text-[11px]" style={{ color: colors.text.muted }}>
-                    {DELIVERY_DESTINATION.detail}
+                    {userProfile ? `${userProfile.name} (${maskPhone(userProfile.phone)})` : '-'}
                   </p>
                 </div>
                 <button
@@ -205,7 +219,7 @@ export default function CartPage() {
               <h2 className="mb-2 text-[15px] font-extrabold" style={{ color: colors.text.dark }}>
                 결제 및 한도 정보
               </h2>
-              <CreditSummaryCard limit={CREDIT_LIMIT} paymentAmount={totalAmount} />
+              <CreditSummaryCard limit={remainingCredit ?? 0} paymentAmount={totalAmount} />
               <p className="mt-3 flex items-center justify-center gap-1 text-[12px]" style={{ color: colors.text.muted }}>
                 <Lightbulb size={13} />
                 외상 대금은 다음 상환일에 맞춰 납부해 주세요.
@@ -239,8 +253,20 @@ export default function CartPage() {
               .map((l) => l.cartItemId)
               .filter((id): id is number => id !== undefined);
 
+            if (!userProfile) {
+              alert('배송지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+              setIsPinOpen(false);
+              return;
+            }
+
             setIsSubmitting(true);
-            createCheckoutRequest(cartItemIds, DELIVERY_ADDRESS)
+            createCheckoutRequest(cartItemIds, {
+              recipientName: userProfile.name,
+              recipientPhone: userProfile.phone,
+              address: userProfile.address,
+              addressDetail: userProfile.addressDetail,
+              zipCode: userProfile.zipCode,
+            })
               .then((result) => {
                 setIsPinOpen(false);
                 clearCart();
