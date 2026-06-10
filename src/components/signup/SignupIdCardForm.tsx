@@ -23,6 +23,7 @@ export interface IdCardInfo {
   imageName: string;
   issuedDate: string;
   address: string;
+  addressDetail: string;
   zonecode: string;
   residentBackDigits: string; // 주민번호 뒷자리 나머지 6자리 (성별코드 제외)
 }
@@ -240,6 +241,18 @@ export default function SignupIdCardForm({
               </p>
               <ChevronRight size={28} strokeWidth={2.5} color="#C8C3B8" />
             </div>
+          </FieldBox>
+
+          {/* 상세주소 */}
+          <FieldBox label="상세주소">
+            <input
+              type="text"
+              value={value.addressDetail}
+              onChange={(e) => onChange({ addressDetail: e.target.value })}
+              placeholder="상세주소를 입력해 주세요"
+              className="mt-2 w-full bg-transparent text-[22px] font-medium outline-none placeholder:text-[#C8C3B8]"
+              style={{ color: colors.text.dark }}
+            />
           </FieldBox>
         </div>
       </main>

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Delete } from 'lucide-react';
 import { colors } from '../../styles/colors';
 
@@ -35,6 +35,10 @@ export default function ResidentBackKeypad({
       closeTimerRef.current = null;
     }
   };
+
+  useEffect(() => {
+    return clearCloseTimer;
+  }, []);
 
   const handlePress = (key: string) => {
     if (key === 'backspace') {

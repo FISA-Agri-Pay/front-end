@@ -169,6 +169,7 @@ const INITIAL_FORM: SignupFormData = {
     imageName: '',
     issuedDate: '',
     address: '',
+    addressDetail: '',
     zonecode: '',
     residentBackDigits: '',
   },
@@ -310,6 +311,7 @@ export default function SignupPage() {
       phone: formData.phoneAuth.phoneNumber,
       name: formData.phoneAuth.name,
       address: formData.idCard.address,
+      addressDetail: formData.idCard.addressDetail,
       zipCode: formData.idCard.zonecode,
       residentId: `${formData.phoneAuth.birthDate}-${formData.phoneAuth.residentFirstDigit}${formData.idCard.residentBackDigits}`,
       password: formData.account.password,
@@ -321,6 +323,11 @@ export default function SignupPage() {
       // useRef는 즉시 반영되므로 navigate 직전에 설정하면 다음 렌더에서 바로 true로 읽힘
       registerCompletedRef.current = true;
       navigate(STEP_PATHS.complete);
+      setRegisterError('');
+    } catch (err) {
+      const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
+      setRegisterError(msg);
+    } finally {
       setFormData((prev) => ({
         ...prev,
         idCard: { ...prev.idCard, residentBackDigits: '' },
@@ -333,12 +340,6 @@ export default function SignupPage() {
           paymentPinError: '',
         },
       }));
-      setRegisterError('');
-    } catch (err) {
-      const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
-      setRegisterError(msg);
-      // PIN 입력값 초기화 (재시도 가능하게), 앞 단계 정보는 유지
-      updateAccount({ paymentPinConfirm: '', paymentPinError: '' });
     }
   };
 
