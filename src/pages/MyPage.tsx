@@ -1,14 +1,15 @@
+import { useEffect, useState } from 'react';
 import { ChevronRight, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import PageHeader from '../components/PageHeader';
 import { colors } from '../styles/colors';
+import { fetchUserProfile } from '../api/auth';
+import type { UserProfile } from '../api/auth';
 
-// ─── Mock 데이터 ───────────────────────────────────────────────────────────────
-
-const mockUser = {
-  name: '김농부',
-  phone: '010-****-1234',
+const maskPhone = (phone: string) => {
+  const d = phone.replace(/-/g, '');
+  return d.length >= 11 ? `${d.slice(0, 3)}-****-${d.slice(7)}` : phone;
 };
 
 const farmMenu = [
@@ -63,6 +64,11 @@ function MenuCard({ items }: { items: MenuItem[] }) {
 
 export default function MyPage() {
   const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    fetchUserProfile().then(setUserProfile).catch(() => {});
+  }, []);
 
   const settingsMenu: MenuItem[] = [
     { id: 1, label: '간편 비밀번호 / 생체인증 관리' },
@@ -84,10 +90,10 @@ export default function MyPage() {
           </div>
           <div className="flex-1">
             <p className="text-[15px] font-bold" style={{ color: colors.text.dark }}>
-              {mockUser.name} 님
+              {userProfile ? `${userProfile.name} 님` : '-'}
             </p>
             <p className="text-[12px] mt-[2px]" style={{ color: colors.text.muted }}>
-              {mockUser.phone}
+              {userProfile ? maskPhone(userProfile.phone) : '-'}
             </p>
           </div>
           <button
