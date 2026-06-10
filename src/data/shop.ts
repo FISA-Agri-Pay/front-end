@@ -24,6 +24,14 @@ export const DELIVERY_DESTINATION = {
   detail: '김농부 (010-****-1234)',
 };
 
+export const DELIVERY_ADDRESS = {
+  recipientName: '김농부',
+  recipientPhone: '010-1234-1234',
+  address: '경북 안동시 농촌마을길 12-3',
+  addressDetail: '창고 앞',
+  zipCode: '36700',
+};
+
 export const SHOP_PRODUCTS: ShopProduct[] = [
   {
     id: 1,

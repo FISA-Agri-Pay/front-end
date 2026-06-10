@@ -8,6 +8,7 @@ import { useCartStore } from '../stores/cartStore';
 
 interface CheckoutLocationState {
   totalAmount?: number;
+  checkoutRequestId?: number;
 }
 
 export default function CheckoutSuccessPage() {
@@ -16,6 +17,7 @@ export default function CheckoutSuccessPage() {
   const clearCart = useCartStore((state) => state.clearCart);
   const state = location.state as CheckoutLocationState | null;
   const totalAmount = state?.totalAmount ?? 0;
+  const checkoutRequestId = state?.checkoutRequestId;
   const remainingLimit = CREDIT_LIMIT - totalAmount;
   const hasValidPaymentAmount = Number.isFinite(totalAmount) && totalAmount > 0;
 
@@ -62,7 +64,7 @@ export default function CheckoutSuccessPage() {
               주문 번호
             </span>
             <span className="text-[13px] font-extrabold" style={{ color: colors.text.dark }}>
-              20260511-0012
+              {checkoutRequestId ?? '-'}
             </span>
           </div>
           <div className="mt-4 flex items-center justify-between">
