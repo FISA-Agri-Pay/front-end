@@ -127,7 +127,7 @@ export default function ProductDetailPage() {
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
       {headerBar}
 
-      <ProductVisual visual={visual} size="lg" />
+      <ProductVisual visual={visual} size="lg" imageUrl={product.imageUrl ?? undefined} />
 
       <main className="flex-1 px-5 pb-28 pt-3">
         <span
