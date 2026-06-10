@@ -104,6 +104,7 @@ export default function ProductDetailPage() {
     unit: product.unit,
     visual,
     tag: product.unit,
+    imageUrl: product.imageUrl,
   };
 
   const handleAddToCart = (onSuccess?: () => void) => {
@@ -204,6 +205,7 @@ export default function ProductDetailPage() {
                   categoryName: product.categoryName,
                   unit: product.unit,
                   tag: product.unit,
+                  imageUrl: product.imageUrl,
                 },
               })
             }

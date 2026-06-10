@@ -8,6 +8,7 @@ export interface ProductSnapshot {
   unit: string;
   visual: ProductVisual;
   tag: string;
+  imageUrl?: string | null;
 }
 
 interface CartItem {

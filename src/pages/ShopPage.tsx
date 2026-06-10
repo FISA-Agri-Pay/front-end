@@ -37,6 +37,7 @@ export default function ShopPage() {
           unit: p.unit,
           visual: categoryToVisual(p.categoryName),
           tag: p.unit,
+          imageUrl: p.imageUrl,
         };
         const isInStore = useCartStore.getState().items.some((i) => i.productId === p.productId);
         if (isInStore) {
@@ -182,7 +183,7 @@ export default function ShopPage() {
                   onClick={() => navigate(`/product-detail/${p.productId}`)}
                 >
                   <div className="w-full rounded-xl overflow-hidden mb-3">
-                    <ProductVisual visual={categoryToVisual(p.categoryName)} size="md" />
+                    <ProductVisual visual={categoryToVisual(p.categoryName)} size="md" imageUrl={p.imageUrl ?? undefined} />
                   </div>
                   <p className="text-xs mb-0.5" style={{ color: colors.text.muted }}>
                     {p.categoryName}

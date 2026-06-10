@@ -19,6 +19,7 @@ interface DirectCheckoutState {
   categoryName: string;
   unit: string;
   tag: string;
+  imageUrl?: string | null;
 }
 
 export default function DirectCheckoutPage() {
@@ -33,7 +34,7 @@ export default function DirectCheckoutPage() {
     return <Navigate to="/shop" replace />;
   }
 
-  const { productName, unitPrice, quantity, totalAmount, visual, categoryName, unit, tag } = state;
+  const { productName, unitPrice, quantity, totalAmount, visual, categoryName, unit, tag, imageUrl } = state;
   const isOverLimit = totalAmount > CREDIT_LIMIT;
 
   return (
@@ -47,7 +48,7 @@ export default function DirectCheckoutPage() {
         >
           <div className="flex gap-3">
             <div className="w-[92px] shrink-0 flex items-center">
-              <ProductVisual visual={visual} />
+              <ProductVisual visual={visual} imageUrl={imageUrl ?? undefined} />
             </div>
             <div className="flex flex-1 flex-col">
               <span
