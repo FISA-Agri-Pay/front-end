@@ -8,11 +8,11 @@ import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
 import type { ProductVisual as ProductVisualType } from '../data/shop';
-import { CREDIT_LIMIT } from '../data/shop';
 import { addToCart } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
 import { fetchUserProfile } from '../api/auth';
 import type { UserProfile } from '../api/auth';
+import { getWalletCredit } from '../api/wallet';
 
 const maskPhone = (phone: string) => {
   const d = phone.replace(/-/g, '');
@@ -41,9 +41,11 @@ export default function DirectCheckoutPage() {
   const [isPinOpen, setIsPinOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
 
   useEffect(() => {
     fetchUserProfile().then(setUserProfile).catch(() => {});
+    getWalletCredit().then((c) => setRemainingCredit(c.remainingAmount)).catch(() => setRemainingCredit(0));
   }, []);
 
   if (!state || !state.productName) {
@@ -51,7 +53,7 @@ export default function DirectCheckoutPage() {
   }
 
   const { productId, productName, unitPrice, quantity, totalAmount, visual, categoryName, unit, tag, imageUrl } = state;
-  const isOverLimit = totalAmount > CREDIT_LIMIT;
+  const isOverLimit = remainingCredit !== null && totalAmount > remainingCredit;
 
   return (
     <div className="flex min-h-screen flex-col pb-24" style={{ backgroundColor: colors.bg }}>
@@ -118,7 +120,7 @@ export default function DirectCheckoutPage() {
           <h2 className="mb-2 text-[15px] font-extrabold" style={{ color: colors.text.dark }}>
             결제 및 한도 정보
           </h2>
-          <CreditSummaryCard limit={CREDIT_LIMIT} paymentAmount={totalAmount} />
+          <CreditSummaryCard limit={remainingCredit ?? 0} paymentAmount={totalAmount} />
           <p className="mt-3 flex items-center justify-center gap-1 text-[12px]" style={{ color: colors.text.muted }}>
             <Lightbulb size={13} />
             외상 대금은 다음 상환일에 맞춰 납부해 주세요.

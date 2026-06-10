@@ -8,12 +8,12 @@ import QuantityStepper from '../components/shop/QuantityStepper';
 import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
-import { CREDIT_LIMIT } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchCart, categoryToVisual, updateCartItemQuantity, deleteCartItem } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
 import { fetchUserProfile } from '../api/auth';
 import type { UserProfile } from '../api/auth';
+import { getWalletCredit } from '../api/wallet';
 
 const maskPhone = (phone: string) => {
   const d = phone.replace(/-/g, '');
@@ -29,13 +29,14 @@ export default function CartPage() {
   const syncFromServer = useCartStore((state) => state.syncFromServer);
   const lines = useMemo(() => selectCartLines(items), [items]);
   const totalAmount = lines.reduce((sum, line) => sum + line.lineTotal, 0);
-  const isOverLimit = totalAmount > CREDIT_LIMIT;
+  const isOverLimit = remainingCredit !== null && totalAmount > remainingCredit;
   const [pin, setPin] = useState('');
   const [isPinOpen, setIsPinOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
 
   const loadCart = () => {
     setIsLoading(true);
@@ -68,6 +69,7 @@ export default function CartPage() {
 
   useEffect(() => {
     fetchUserProfile().then(setUserProfile).catch(() => {});
+    getWalletCredit().then((c) => setRemainingCredit(c.remainingAmount)).catch(() => setRemainingCredit(0));
   }, []);
 
   const openPin = () => {
@@ -217,7 +219,7 @@ export default function CartPage() {
               <h2 className="mb-2 text-[15px] font-extrabold" style={{ color: colors.text.dark }}>
                 결제 및 한도 정보
               </h2>
-              <CreditSummaryCard limit={CREDIT_LIMIT} paymentAmount={totalAmount} />
+              <CreditSummaryCard limit={remainingCredit ?? 0} paymentAmount={totalAmount} />
               <p className="mt-3 flex items-center justify-center gap-1 text-[12px]" style={{ color: colors.text.muted }}>
                 <Lightbulb size={13} />
                 외상 대금은 다음 상환일에 맞춰 납부해 주세요.
