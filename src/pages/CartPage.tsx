@@ -29,7 +29,6 @@ export default function CartPage() {
   const syncFromServer = useCartStore((state) => state.syncFromServer);
   const lines = useMemo(() => selectCartLines(items), [items]);
   const totalAmount = lines.reduce((sum, line) => sum + line.lineTotal, 0);
-  const isOverLimit = remainingCredit !== null && totalAmount > remainingCredit;
   const [pin, setPin] = useState('');
   const [isPinOpen, setIsPinOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +36,7 @@ export default function CartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
+  const isOverLimit = remainingCredit !== null && totalAmount > remainingCredit;
 
   const loadCart = () => {
     setIsLoading(true);
