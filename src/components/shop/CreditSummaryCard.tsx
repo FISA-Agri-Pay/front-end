@@ -44,15 +44,6 @@ export default function CreditSummaryCard({ limit, paymentAmount }: CreditSummar
           {safeRemaining.toLocaleString()}원
         </span>
       </div>
-      {isOverLimit && (
-        <p
-          role="alert"
-          className="mt-3 rounded-[8px] px-3 py-2 text-[12px] font-bold leading-5"
-          style={{ backgroundColor: '#FFF0EE', color: colors.text.danger }}
-        >
-          외상 한도를 {(paymentAmount - limit).toLocaleString()}원 초과했습니다. 수량을 줄인 뒤 결제해 주세요.
-        </p>
-      )}
     </div>
   );
 }
