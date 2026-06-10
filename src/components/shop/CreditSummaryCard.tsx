@@ -8,7 +8,6 @@ interface CreditSummaryCardProps {
 export default function CreditSummaryCard({ limit, paymentAmount }: CreditSummaryCardProps) {
   const remaining = limit - paymentAmount;
   const safeRemaining = Math.max(remaining, 0);
-  const isOverLimit = remaining < 0;
 
   return (
     <div
