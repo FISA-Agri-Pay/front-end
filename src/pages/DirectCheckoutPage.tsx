@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Lightbulb, MapPin } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -8,9 +8,16 @@ import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
 import type { ProductVisual as ProductVisualType } from '../data/shop';
-import { CREDIT_LIMIT, DELIVERY_ADDRESS, DELIVERY_DESTINATION } from '../data/shop';
+import { CREDIT_LIMIT } from '../data/shop';
 import { addToCart } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
+import { fetchUserProfile } from '../api/auth';
+import type { UserProfile } from '../api/auth';
+
+const maskPhone = (phone: string) => {
+  const d = phone.replace(/-/g, '');
+  return d.length >= 11 ? `${d.slice(0, 3)}-****-${d.slice(7)}` : phone;
+};
 
 interface DirectCheckoutState {
   productId: string;
@@ -33,6 +40,11 @@ export default function DirectCheckoutPage() {
   const [pin, setPin] = useState('');
   const [isPinOpen, setIsPinOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    fetchUserProfile().then(setUserProfile).catch(() => {});
+  }, []);
 
   if (!state || !state.productName) {
     return <Navigate to="/shop" replace />;
@@ -86,10 +98,10 @@ export default function DirectCheckoutPage() {
             <MapPin size={20} color={colors.primary} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-extrabold" style={{ color: colors.text.dark }}>
-                {DELIVERY_DESTINATION.title}
+                {userProfile?.address ?? '-'}
               </p>
               <p className="mt-1 text-[11px]" style={{ color: colors.text.muted }}>
-                {DELIVERY_DESTINATION.detail}
+                {userProfile ? `${userProfile.name} (${maskPhone(userProfile.phone)})` : '-'}
               </p>
             </div>
             <button
@@ -131,10 +143,21 @@ export default function DirectCheckoutPage() {
           onClose={() => { if (!isSubmitting) setIsPinOpen(false); }}
           onComplete={() => {
             if (isOverLimit) return;
+            if (!userProfile) {
+              alert('배송지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+              setIsPinOpen(false);
+              return;
+            }
             setIsSubmitting(true);
             addToCart(productId, quantity)
               .then((cartItem) =>
-                createCheckoutRequest([cartItem.cartItemId], DELIVERY_ADDRESS),
+                createCheckoutRequest([cartItem.cartItemId], {
+                  recipientName: userProfile.name,
+                  recipientPhone: userProfile.phone,
+                  address: userProfile.address,
+                  addressDetail: userProfile.addressDetail,
+                  zipCode: userProfile.zipCode,
+                }),
               )
               .then((result) => {
                 setIsPinOpen(false);

@@ -8,10 +8,17 @@ import QuantityStepper from '../components/shop/QuantityStepper';
 import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
-import { CREDIT_LIMIT, DELIVERY_ADDRESS, DELIVERY_DESTINATION } from '../data/shop';
+import { CREDIT_LIMIT } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchCart, categoryToVisual, updateCartItemQuantity, deleteCartItem } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
+import { fetchUserProfile } from '../api/auth';
+import type { UserProfile } from '../api/auth';
+
+const maskPhone = (phone: string) => {
+  const d = phone.replace(/-/g, '');
+  return d.length >= 11 ? `${d.slice(0, 3)}-****-${d.slice(7)}` : phone;
+};
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -28,6 +35,7 @@ export default function CartPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const loadCart = () => {
     setIsLoading(true);
@@ -57,6 +65,10 @@ export default function CartPage() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(loadCart, []);
+
+  useEffect(() => {
+    fetchUserProfile().then(setUserProfile).catch(() => {});
+  }, []);
 
   const openPin = () => {
     setPin('');
@@ -185,10 +197,10 @@ export default function CartPage() {
                 <MapPin size={20} color={colors.primary} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-extrabold" style={{ color: colors.text.dark }}>
-                    {DELIVERY_DESTINATION.title}
+                    {userProfile?.address ?? '-'}
                   </p>
                   <p className="mt-1 text-[11px]" style={{ color: colors.text.muted }}>
-                    {DELIVERY_DESTINATION.detail}
+                    {userProfile ? `${userProfile.name} (${maskPhone(userProfile.phone)})` : '-'}
                   </p>
                 </div>
                 <button
@@ -239,8 +251,20 @@ export default function CartPage() {
               .map((l) => l.cartItemId)
               .filter((id): id is number => id !== undefined);
 
+            if (!userProfile) {
+              alert('배송지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+              setIsPinOpen(false);
+              return;
+            }
+
             setIsSubmitting(true);
-            createCheckoutRequest(cartItemIds, DELIVERY_ADDRESS)
+            createCheckoutRequest(cartItemIds, {
+              recipientName: userProfile.name,
+              recipientPhone: userProfile.phone,
+              address: userProfile.address,
+              addressDetail: userProfile.addressDetail,
+              zipCode: userProfile.zipCode,
+            })
               .then((result) => {
                 setIsPinOpen(false);
                 clearCart();
