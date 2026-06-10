@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { AxiosError } from 'axios';
 import SignupAgree from '../components/signup/SignupAgree';
@@ -196,7 +196,9 @@ export default function SignupPage() {
   const [formData, setFormData] = useState<SignupFormData>(INITIAL_FORM);
   const [selectedDetail, setSelectedDetail] = useState<SelectedDetail | null>(null);
   const [registerError, setRegisterError] = useState('');
-  const registerCompletedRef = useRef(false);
+  const [registerCompleted, setRegisterCompleted] = useState(false);
+  const locationState = location.state as { registered?: boolean } | null;
+  const isRegistered = registerCompleted || locationState?.registered === true;
   const currentDetail = selectedDetail?.pathname === location.pathname ? selectedDetail : null;
 
   const registerMutation = useRegister();
@@ -320,9 +322,8 @@ export default function SignupPage() {
     try {
       await registerMutation.mutateAsync(payload);
 
-      // useRef는 즉시 반영되므로 navigate 직전에 설정하면 다음 렌더에서 바로 true로 읽힘
-      registerCompletedRef.current = true;
-      navigate(STEP_PATHS.complete);
+      setRegisterCompleted(true);
+      navigate(STEP_PATHS.complete, { state: { registered: true } });
       setRegisterError('');
     } catch (err) {
       const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
@@ -364,12 +365,12 @@ export default function SignupPage() {
     );
   }
 
-  if (!hasCompletedPreviousSteps(step, formData, registerCompletedRef.current)) {
+  if (!hasCompletedPreviousSteps(step, formData, isRegistered)) {
     return <Navigate to={STEP_PATHS.agree} replace />;
   }
 
   // 가드 통과 후 등록 완료 상태면 URL/step과 무관하게 바로 완료 화면 반환
-  if (registerCompletedRef.current) {
+  if (isRegistered) {
     return (
       <SignupComplete
         onGoHome={() => navigate('/home')}
@@ -488,13 +489,6 @@ export default function SignupPage() {
           }}
           onComplete={handlePinConfirmComplete}
           onBack={() => goStep('payment-pin')}
-        />
-      );
-    case 'complete':
-      return (
-        <SignupComplete
-          onGoHome={() => navigate('/home')}
-          onGoLogin={() => navigate('/login')}
         />
       );
   }
