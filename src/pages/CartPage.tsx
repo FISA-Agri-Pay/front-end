@@ -8,9 +8,10 @@ import QuantityStepper from '../components/shop/QuantityStepper';
 import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
-import { CREDIT_LIMIT, DELIVERY_DESTINATION } from '../data/shop';
+import { CREDIT_LIMIT, DELIVERY_ADDRESS, DELIVERY_DESTINATION } from '../data/shop';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchCart, categoryToVisual, updateCartItemQuantity, deleteCartItem } from '../api/cart';
+import { createCheckoutRequest } from '../api/checkout';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function CartPage() {
   const [isPinOpen, setIsPinOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadCart = () => {
     setIsLoading(true);
@@ -231,11 +233,26 @@ export default function CartPage() {
           amount={totalAmount}
           pin={pin}
           onChange={setPin}
-          onClose={() => setIsPinOpen(false)}
+          onClose={() => { if (!isSubmitting) setIsPinOpen(false); }}
           onComplete={() => {
-            setIsPinOpen(false);
-            clearCart();
-            navigate('/checkout-success', { state: { totalAmount } });
+            const cartItemIds = lines
+              .map((l) => l.cartItemId)
+              .filter((id): id is number => id !== undefined);
+
+            setIsSubmitting(true);
+            createCheckoutRequest(cartItemIds, DELIVERY_ADDRESS)
+              .then((result) => {
+                setIsPinOpen(false);
+                clearCart();
+                navigate('/checkout-success', {
+                  state: { totalAmount, checkoutRequestId: result.checkoutRequestId },
+                });
+              })
+              .catch(() => {
+                setIsSubmitting(false);
+                setPin('');
+                alert('결제 요청에 실패했습니다. 다시 시도해 주세요.');
+              });
           }}
         />
       )}
