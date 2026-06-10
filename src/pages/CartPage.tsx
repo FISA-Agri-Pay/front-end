@@ -44,6 +44,7 @@ export default function CartPage() {
               unit: item.unit,
               visual: categoryToVisual(item.categoryName),
               tag: '',
+              imageUrl: item.imageUrl,
             },
           })),
         );
@@ -148,7 +149,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <div className="mt-3 grid grid-cols-[92px_1fr] gap-4">
-                    <ProductVisual visual={snapshot.visual} />
+                    <ProductVisual visual={snapshot.visual} imageUrl={snapshot.imageUrl ?? undefined} />
                     <div className="self-end">
                       <QuantityStepper
                         value={quantity}
