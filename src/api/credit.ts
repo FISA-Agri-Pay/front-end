@@ -13,11 +13,11 @@ import type {
 // ─── 엔드포인트 상수 ──────────────────────────────────────────────────────────
 
 const ENDPOINTS = {
-  SESSION_START: '/api/v1/credit/session/start',
-  CROP:          '/api/v1/credit/crop',
-  LAND:          '/api/v1/credit/land',
-  INSURANCE:     '/api/v1/credit/insurance',
-  SUBMIT:        '/api/v1/credit/submit',
+  SESSION_START: '/api/v1/core/credit/session/start',
+  CROP:          '/api/v1/core/credit/crop',
+  LAND:          '/api/v1/core/credit/land',
+  INSURANCE:     '/api/v1/core/credit/insurance',
+  SUBMIT:        '/api/v1/core/credit/submit',
 } as const;
 
 // ─── API 함수 ─────────────────────────────────────────────────────────────────

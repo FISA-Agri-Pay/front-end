@@ -3,8 +3,8 @@ import type { ApiResponse } from '../types/credit';
 import type { WalletInfo, WalletCredit } from '../types/wallet';
 
 const ENDPOINTS = {
-  WALLET_ME: '/api/core/wallet/me',
-  WALLET_CREDIT: '/api/core/wallet/credit',
+  WALLET_ME: '/api/v1/core/wallet/me',
+  WALLET_CREDIT: '/api/v1/core/wallet/credit',
 } as const;
 
 export async function getMyWallet(): Promise<WalletInfo> {
