@@ -9,6 +9,7 @@ interface SignupPaymentPinProps {
   description: string;
   pin: string;
   errorMessage?: string;
+  disabled?: boolean;
   onChange: (pin: string) => void;
   onComplete: (pin: string) => void;
   onBack: () => void;
@@ -21,6 +22,7 @@ export default function SignupPaymentPin({
   description,
   pin,
   errorMessage,
+  disabled,
   onChange,
   onComplete,
   onBack,
@@ -38,7 +40,7 @@ export default function SignupPaymentPin({
   }, []);
 
   const appendNumber = (value: string) => {
-    if (pin.length >= 6) return;
+    if (disabled || pin.length >= 6) return;
 
     const next = `${pin}${value}`;
     onChange(next);
@@ -52,6 +54,7 @@ export default function SignupPaymentPin({
   };
 
   const deleteNumber = () => {
+    if (disabled) return;
     clearCompletionTimer();
     onChange(pin.slice(0, -1));
   };
@@ -109,7 +112,10 @@ export default function SignupPaymentPin({
         )}
       </main>
 
-      <section className="bg-white px-8 pb-8 pt-8">
+      <section
+        className="bg-white px-8 pb-8 pt-8"
+        style={{ opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : 'auto' }}
+      >
         <div className="grid grid-cols-3 gap-y-6">
           {NUMBERS.map((value, index) => {
             if (!value) return <div key={index} />;
