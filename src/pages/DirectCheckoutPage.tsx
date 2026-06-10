@@ -8,9 +8,12 @@ import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
 import type { ProductVisual as ProductVisualType } from '../data/shop';
-import { CREDIT_LIMIT, DELIVERY_DESTINATION } from '../data/shop';
+import { CREDIT_LIMIT, DELIVERY_ADDRESS, DELIVERY_DESTINATION } from '../data/shop';
+import { addToCart } from '../api/cart';
+import { createCheckoutRequest } from '../api/checkout';
 
 interface DirectCheckoutState {
+  productId: string;
   productName: string;
   unitPrice: number;
   quantity: number;
@@ -29,12 +32,13 @@ export default function DirectCheckoutPage() {
 
   const [pin, setPin] = useState('');
   const [isPinOpen, setIsPinOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!state || !state.productName) {
     return <Navigate to="/shop" replace />;
   }
 
-  const { productName, unitPrice, quantity, totalAmount, visual, categoryName, unit, tag, imageUrl } = state;
+  const { productId, productName, unitPrice, quantity, totalAmount, visual, categoryName, unit, tag, imageUrl } = state;
   const isOverLimit = totalAmount > CREDIT_LIMIT;
 
   return (
@@ -124,11 +128,25 @@ export default function DirectCheckoutPage() {
           amount={totalAmount}
           pin={pin}
           onChange={setPin}
-          onClose={() => setIsPinOpen(false)}
+          onClose={() => { if (!isSubmitting) setIsPinOpen(false); }}
           onComplete={() => {
             if (isOverLimit) return;
-            setIsPinOpen(false);
-            navigate('/checkout-success', { state: { totalAmount } });
+            setIsSubmitting(true);
+            addToCart(productId, quantity)
+              .then((cartItem) =>
+                createCheckoutRequest([cartItem.cartItemId], DELIVERY_ADDRESS),
+              )
+              .then((result) => {
+                setIsPinOpen(false);
+                navigate('/checkout-success', {
+                  state: { totalAmount, checkoutRequestId: result.checkoutRequestId },
+                });
+              })
+              .catch(() => {
+                setIsSubmitting(false);
+                setPin('');
+                alert('결제 요청에 실패했습니다. 다시 시도해 주세요.');
+              });
           }}
         />
       )}

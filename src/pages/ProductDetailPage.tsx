@@ -197,6 +197,7 @@ export default function ProductDetailPage() {
             onClick={() =>
               navigate('/checkout-direct', {
                 state: {
+                  productId: product.productId,
                   productName: product.name,
                   unitPrice: product.price,
                   quantity,
