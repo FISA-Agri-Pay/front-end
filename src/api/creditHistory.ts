@@ -3,8 +3,8 @@ import type { ApiResponse } from '../types/credit';
 import type { CreditUsageHistory, CreditRepaymentHistory } from '../types/creditHistory';
 
 const ENDPOINTS = {
-  USAGES:     '/api/core/credit-history/usages',
-  REPAYMENTS: '/api/core/credit-history/repayments',
+  USAGES:     '/api/v1/core/credit-history/usages',
+  REPAYMENTS: '/api/v1/core/credit-history/repayments',
 } as const;
 
 export async function getCreditUsages(): Promise<CreditUsageHistory[]> {
