@@ -5,42 +5,68 @@ import { Bot, MoreVertical, Plus, Send, Truck } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import Button from '../components/Button';
 import { colors } from '../styles/colors';
-
-type ChatMessageType = 'text' | 'credit-summary' | 'delivery-status' | 'recommendation';
+import {
+  askFarmerChat,
+  createFarmerChatSession,
+  getFarmerChatMessages,
+  getFarmerChatSession,
+} from '../api/chatbot';
+import type { ChatMessageResponse, ChatUiCard } from '../types/chatbot';
 
 type ChatCard =
   | {
       type: 'credit-summary';
       limit: number;
       used: number;
+      remaining: number;
+      actionRoute?: string;
+      actionLabel?: string;
+    }
+  | {
+      type: 'repayment-summary';
+      nextDueDate?: string;
+      interestDue: number;
+      isOverdue: boolean;
+      overdueAmount: number;
+      actionRoute?: string;
+      actionLabel?: string;
     }
   | {
       type: 'delivery-status';
       itemName: string;
       status: string;
+      actionRoute?: string;
+      actionLabel?: string;
     }
   | {
       type: 'recommendation';
       productName: string;
       price: number;
+      reason?: string;
+      actionRoute?: string;
+      actionLabel?: string;
+    }
+  | {
+      type: 'checkout-confirmation';
+      checkoutIntentId?: string;
+      totalAmount: number;
+      expiresAt?: string;
+      actionLabel?: string;
     };
 
 type ChatMessage = {
-  id: number;
+  id: string;
   sender: 'assistant' | 'user';
   text: string;
   time?: string;
-  type?: ChatMessageType;
   card?: ChatCard;
+  isError?: boolean;
 };
 
 const quickQuestions = ['비료 추천해줘', '배송 현황 조회', '스마트팜 센서 문의'];
-
-const CREDIT_LIMIT = 4000000;
-const CREDIT_USED = 2500000;
-const FERTILIZER_PRODUCT = { productName: '복합 비료 20kg', price: 50000 };
-const SENSOR_PRODUCT = { productName: '스마트팜 센서 키트', price: 250000 };
-const LATEST_DELIVERY = { itemName: '복합 비료 20kg', status: '배송 중' };
+const CHAT_SESSION_STORAGE_KEY = 'farmerChatSessionId';
+const CHAT_USER_ID =
+  ((import.meta.env.VITE_AIOPS_FARMER_USER_ID as string | undefined)?.trim()) || 'anonymous';
 
 const currencyFormatter = new Intl.NumberFormat('ko-KR');
 
@@ -57,56 +83,119 @@ function formatKoreanDate(date: Date) {
   }).format(date);
 }
 
-function getDemoReply(message: string): Pick<ChatMessage, 'text' | 'type' | 'card'> {
-  if (message.includes('배송')) {
-    return {
-      type: 'delivery-status',
-      text: `최근 주문하신 '${LATEST_DELIVERY.itemName}'는 현재 ${LATEST_DELIVERY.status}입니다.`,
-      card: {
-        type: 'delivery-status',
-        ...LATEST_DELIVERY,
-      },
-    };
-  }
+function formatMessageTime(value?: string) {
+  if (!value) return undefined;
 
-  if (message.includes('센서')) {
-    return {
-      type: 'recommendation',
-      text: `${SENSOR_PRODUCT.productName}는 토양 습도와 온도 확인에 적합해요. 상점에서 상세 정보를 확인할 수 있습니다.`,
-      card: {
-        type: 'recommendation',
-        ...SENSOR_PRODUCT,
-      },
-    };
-  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
 
-  if (message.includes('비료') || message.includes('추천')) {
-    return {
-      type: 'recommendation',
-      text: `현재 한도와 작물 정보를 기준으로 ${FERTILIZER_PRODUCT.productName}를 우선 추천드릴게요.`,
-      card: {
-        type: 'recommendation',
-        ...FERTILIZER_PRODUCT,
-      },
-    };
-  }
+  return new Intl.DateTimeFormat('ko-KR', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
 
-  if (message.includes('외상') || message.includes('잔액') || message.includes('한도')) {
+function getNumber(value: unknown, fallback = 0) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function normalizeCard(card: ChatUiCard): ChatCard | undefined {
+  if (card.type === 'credit-summary') {
+    const limit = getNumber(card.limit);
+    const used = getNumber(card.used);
+    const remaining = getNumber(card.remaining, limit - used);
+
     return {
       type: 'credit-summary',
-      text: `현재 고객님의 외상 금액은 ${formatCurrency(CREDIT_USED)}입니다.`,
-      card: {
-        type: 'credit-summary',
-        limit: CREDIT_LIMIT,
-        used: CREDIT_USED,
-      },
+      limit,
+      used,
+      remaining,
+      actionRoute: card.action?.route,
+      actionLabel: card.action?.label,
     };
   }
 
+  if (card.type === 'repayment-summary') {
+    return {
+      type: 'repayment-summary',
+      nextDueDate: card.next_due_date,
+      interestDue: getNumber(card.interest_due),
+      isOverdue: Boolean(card.is_overdue),
+      overdueAmount: getNumber(card.overdue_amount),
+      actionRoute: card.action?.route,
+      actionLabel: card.action?.label,
+    };
+  }
+
+  if (card.type === 'recommendation') {
+    return {
+      type: 'recommendation',
+      productName: card.product_name ?? '추천 상품',
+      price: getNumber(card.price),
+      reason: card.reason,
+      actionRoute: card.action?.route,
+      actionLabel: card.action?.label,
+    };
+  }
+
+  if (card.type === 'delivery-status') {
+    return {
+      type: 'delivery-status',
+      itemName: card.item_name ?? '최근 주문',
+      status: card.delivery_status ?? '배송 상태 확인 중',
+      actionRoute: card.action?.route,
+      actionLabel: card.action?.label,
+    };
+  }
+
+  if (card.type === 'checkout-confirmation') {
+    return {
+      type: 'checkout-confirmation',
+      checkoutIntentId: card.checkout_intent_id,
+      totalAmount: getNumber(card.total_amount),
+      expiresAt: card.expires_at,
+      actionLabel: card.action?.label,
+    };
+  }
+
+  return undefined;
+}
+
+function makeGreetingMessage(): ChatMessage {
   return {
-    type: 'text',
-    text: '외상 한도, 상환, 배송 현황, 농자재 추천을 도와드릴 수 있어요.',
+    id: 'local-greeting',
+    sender: 'assistant',
+    text: '안녕하세요! 콩콩팥팥 농업 도우미입니다.\n무엇을 도와드릴까요?',
   };
+}
+
+function makeErrorMessage(id: string, text: string): ChatMessage {
+  return {
+    id,
+    sender: 'assistant',
+    text,
+    isError: true,
+  };
+}
+
+function mapApiMessage(message: ChatMessageResponse, fallbackCards: ChatUiCard[] = []): ChatMessage {
+  const uiCards = message.ui_cards.length > 0 ? message.ui_cards : fallbackCards;
+  const firstCard = uiCards.map(normalizeCard).find((card): card is ChatCard => Boolean(card));
+
+  return {
+    id: message.message_id,
+    sender: message.role === 'USER' ? 'user' : 'assistant',
+    text: message.content,
+    time: formatMessageTime(message.created_at),
+    card: firstCard,
+  };
+}
+
+function getHttpStatus(error: unknown) {
+  if (typeof error !== 'object' || error === null || !('response' in error)) return undefined;
+
+  const response = (error as { response?: { status?: unknown } }).response;
+  return typeof response?.status === 'number' ? response.status : undefined;
 }
 
 function AssistantAvatar() {
@@ -122,10 +211,15 @@ function AssistantAvatar() {
 
 function AssistantCard({ message }: { message: ChatMessage }) {
   const navigate = useNavigate();
+  const card = message.card;
 
-  if (message.card?.type === 'credit-summary') {
-    const remaining = message.card.limit - message.card.used;
+  if (!card) return null;
 
+  const navigateTo = (route: string | undefined, fallbackRoute: string) => {
+    navigate(route ?? fallbackRoute);
+  };
+
+  if (card.type === 'credit-summary') {
     return (
       <div
         className="mt-3 overflow-hidden rounded-[14px] bg-white"
@@ -136,26 +230,62 @@ function AssistantCard({ message }: { message: ChatMessage }) {
             외상 한도 현황
           </p>
           <p className="mt-1 text-[22px] font-extrabold leading-7" style={{ color: colors.text.dark }}>
-            총 {formatCurrency(message.card.limit)} 한도
+            총 {formatCurrency(card.limit)} 한도
           </p>
           <p className="mt-2 text-[13px] font-bold" style={{ color: colors.text.muted }}>
-            사용 {formatCurrency(message.card.used)} · 잔여 {formatCurrency(remaining)}
+            사용 {formatCurrency(card.used)} · 잔여 {formatCurrency(card.remaining)}
           </p>
         </div>
         <div className="px-4 pb-4">
-          <Button style={{ height: 48, borderRadius: 12 }} onClick={() => navigate('/wallet')}>
-            상환하러 가기
+          <Button
+            style={{ height: 48, borderRadius: 12 }}
+            onClick={() => navigateTo(card.actionRoute, '/wallet')}
+          >
+            {card.actionLabel ?? '상환하러 가기'}
           </Button>
         </div>
       </div>
     );
   }
 
-  if (message.card?.type === 'delivery-status') {
+  if (card.type === 'repayment-summary') {
+    return (
+      <div
+        className="mt-3 rounded-[14px] bg-white p-4"
+        style={{ border: '1px solid #E5E0D2' }}
+      >
+        <p className="text-[13px] font-bold" style={{ color: colors.text.muted }}>
+          다음 상환 정보
+        </p>
+        <p className="mt-1 text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
+          {card.nextDueDate ?? '상환일 확인 중'}
+        </p>
+        <p className="mt-2 text-[13px] font-bold" style={{ color: colors.text.muted }}>
+          이자 {formatCurrency(card.interestDue)}
+        </p>
+        {card.isOverdue && (
+          <p className="mt-1 text-[13px] font-bold" style={{ color: colors.text.danger }}>
+            연체 {formatCurrency(card.overdueAmount)}
+          </p>
+        )}
+        <div className="mt-4">
+          <Button
+            variant="outline"
+            style={{ height: 42, borderRadius: 12 }}
+            onClick={() => navigateTo(card.actionRoute, '/wallet')}
+          >
+            {card.actionLabel ?? '상환 정보 보기'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (card.type === 'delivery-status') {
     return (
       <button
         type="button"
-        onClick={() => navigate('/history')}
+        onClick={() => navigateTo(card.actionRoute, '/history')}
         className="mt-3 flex w-full items-center gap-3 rounded-[14px] bg-white px-4 py-3 text-left"
         style={{ border: '1px solid #E5E0D2' }}
       >
@@ -167,17 +297,17 @@ function AssistantCard({ message }: { message: ChatMessage }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[14px] font-extrabold leading-5" style={{ color: colors.text.dark }}>
-            {message.card.itemName}
+            {card.itemName}
           </p>
           <p className="mt-0.5 text-[13px] font-bold" style={{ color: colors.primary }}>
-            {message.card.status}
+            {card.status}
           </p>
         </div>
       </button>
     );
   }
 
-  if (message.card?.type === 'recommendation') {
+  if (card.type === 'recommendation') {
     return (
       <div
         className="mt-3 rounded-[14px] bg-white p-4"
@@ -187,21 +317,52 @@ function AssistantCard({ message }: { message: ChatMessage }) {
           추천 상품
         </p>
         <p className="mt-1 text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
-          {message.card.productName}
+          {card.productName}
         </p>
         <p className="mt-1 text-[14px] font-extrabold" style={{ color: colors.text.dark }}>
-          {formatCurrency(message.card.price)}
+          {formatCurrency(card.price)}
         </p>
+        {card.reason && (
+          <p className="mt-2 text-[12px] font-bold leading-5" style={{ color: colors.text.muted }}>
+            {card.reason}
+          </p>
+        )}
         <div className="mt-4">
-          <Button variant="outline" style={{ height: 42, borderRadius: 12 }} onClick={() => navigate('/shop')}>
-            상점에서 보기
+          <Button
+            variant="outline"
+            style={{ height: 42, borderRadius: 12 }}
+            onClick={() => navigateTo(card.actionRoute, '/shop')}
+          >
+            {card.actionLabel ?? '상점에서 보기'}
           </Button>
         </div>
       </div>
     );
   }
 
-  return null;
+  return (
+    <div
+      className="mt-3 rounded-[14px] bg-white p-4"
+      style={{ border: '1px solid #E5E0D2' }}
+    >
+      <p className="text-[13px] font-bold" style={{ color: colors.text.muted }}>
+        결제 승인 준비
+      </p>
+      <p className="mt-1 text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
+        {formatCurrency(card.totalAmount)}
+      </p>
+      {card.expiresAt && (
+        <p className="mt-2 text-[12px] font-bold" style={{ color: colors.text.muted }}>
+          만료 시각 {card.expiresAt}
+        </p>
+      )}
+      <div className="mt-4">
+        <Button disabled style={{ height: 42, borderRadius: 12 }}>
+          {card.actionLabel ?? '승인 API 준비 중'}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 function ChatBubble({ message }: { message: ChatMessage }) {
@@ -236,7 +397,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         </p>
         <div
           className="inline-block max-w-full rounded-[18px] rounded-tl-[6px] bg-white px-4 py-3"
-          style={{ color: '#111827' }}
+          style={{ color: message.isError ? colors.text.danger : '#111827' }}
         >
           <p className="whitespace-pre-line text-[16px] font-medium leading-6">{message.text}</p>
         </div>
@@ -250,62 +411,137 @@ export default function ChatbotPage() {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [chatDateLabel] = useState(() => formatKoreanDate(new Date()));
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([makeGreetingMessage()]);
+  const [isBooting, setIsBooting] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      sender: 'assistant',
-      type: 'text',
-      text: '안녕하세요! 콩콩팥팥 농업 도우미입니다.\n무엇을 도와드릴까요?',
-    },
-    {
-      id: 2,
-      sender: 'user',
-      text: '내 외상 잔액이 얼마야?',
-      time: '오후 3:05',
-    },
-    {
-      id: 3,
-      sender: 'assistant',
-      type: 'credit-summary',
-      text: `현재 고객님의 외상 금액은 ${formatCurrency(CREDIT_USED)}입니다.`,
-      card: {
-        type: 'credit-summary',
-        limit: CREDIT_LIMIT,
-        used: CREDIT_USED,
-      },
-    },
-  ]);
+  const localMessageIdRef = useRef(0);
+
+  const createLocalMessageId = (prefix: string) => {
+    localMessageIdRef.current += 1;
+    return `${prefix}-${localMessageIdRef.current}`;
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initializeSession() {
+      setIsBooting(true);
+
+      const savedSessionId = sessionStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+
+      try {
+        if (savedSessionId) {
+          await getFarmerChatSession(savedSessionId);
+          const history = await getFarmerChatMessages(savedSessionId);
+
+          if (!isMounted) return;
+
+          setSessionId(savedSessionId);
+          setMessages(
+            history.items.length > 0
+              ? history.items.map((message) => mapApiMessage(message))
+              : [makeGreetingMessage()],
+          );
+          return;
+        }
+
+        const session = await createFarmerChatSession({
+          user_id: CHAT_USER_ID,
+          title: '콩콩팥팥 도우미',
+        });
+
+        if (!isMounted) return;
+
+        sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, session.session_id);
+        setSessionId(session.session_id);
+        setMessages([makeGreetingMessage()]);
+      } catch {
+        sessionStorage.removeItem(CHAT_SESSION_STORAGE_KEY);
+
+        if (!isMounted) return;
+
+        setMessages([
+          makeGreetingMessage(),
+          makeErrorMessage(
+            'local-session-error',
+            '챗봇 세션을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+          ),
+        ]);
+      } finally {
+        if (isMounted) setIsBooting(false);
+      }
+    }
+
+    initializeSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: 'end' });
-  }, [messages]);
+  }, [messages, isSending]);
 
-  const sendMessage = (message: string) => {
-    const trimmed = message.trim();
-    if (!trimmed) return;
+  const ensureSession = async () => {
+    if (sessionId) return sessionId;
 
-    const reply = getDemoReply(trimmed);
-
-    setMessages((current) => {
-      const nextId = current.length + 1;
-
-      return [
-        ...current,
-        {
-          id: nextId,
-          sender: 'user',
-          text: trimmed,
-          time: '방금',
-        },
-        {
-          id: nextId + 1,
-          sender: 'assistant',
-          ...reply,
-        },
-      ];
+    const session = await createFarmerChatSession({
+      user_id: CHAT_USER_ID,
+      title: '콩콩팥팥 도우미',
     });
+
+    sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, session.session_id);
+    setSessionId(session.session_id);
+    return session.session_id;
+  };
+
+  const sendMessage = async (message: string) => {
+    const trimmed = message.trim();
+    if (!trimmed || isSending) return;
+
+    const localUserMessage: ChatMessage = {
+      id: createLocalMessageId('local-user'),
+      sender: 'user',
+      text: trimmed,
+      time: '방금',
+    };
+
+    setMessages((current) => [...current, localUserMessage]);
     setInput('');
+    setIsSending(true);
+
+    try {
+      const currentSessionId = await ensureSession();
+      const response = await askFarmerChat({
+        message: trimmed,
+        session_id: currentSessionId,
+        user_id: CHAT_USER_ID,
+      });
+
+      setSessionId(response.session.session_id);
+      sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, response.session.session_id);
+
+      setMessages((current) => [
+        ...current,
+        mapApiMessage(response.assistant_message, response.ui_cards),
+      ]);
+    } catch (error) {
+      const status = getHttpStatus(error);
+      const message =
+        status === 404
+          ? '챗봇 세션이 만료되었습니다. 새로고침 후 다시 질문해 주세요.'
+          : '답변을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
+      setMessages((current) => [
+        ...current,
+        makeErrorMessage(createLocalMessageId('local-error'), message),
+      ]);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -331,7 +567,7 @@ export default function ChatbotPage() {
         }
       />
 
-      <main className="flex-1 overflow-y-auto px-4 pb-[154px] pt-6">
+      <main className="flex-1 overflow-y-auto px-4 pb-[166px] pt-6">
         <div
           className="mx-auto mb-8 w-fit rounded-full px-4 py-2 text-[13px] font-bold"
           style={{ backgroundColor: '#EBE8E0', color: '#6F7583' }}
@@ -342,6 +578,17 @@ export default function ChatbotPage() {
           {messages.map((message) => (
             <ChatBubble key={message.id} message={message} />
           ))}
+          {isSending && (
+            <div className="flex items-start gap-3">
+              <AssistantAvatar />
+              <div
+                className="rounded-[18px] rounded-tl-[6px] bg-white px-4 py-3 text-[14px] font-bold"
+                style={{ color: colors.text.muted }}
+              >
+                답변을 준비하고 있어요...
+              </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </main>
@@ -356,11 +603,13 @@ export default function ChatbotPage() {
               key={question}
               type="button"
               onClick={() => sendMessage(question)}
+              disabled={isBooting || isSending}
               className="h-10 shrink-0 rounded-full px-4 text-[14px] font-bold"
               style={{
                 backgroundColor: colors.white,
                 border: '1px solid #DCD6C2',
                 color: colors.primary,
+                opacity: isBooting || isSending ? 0.5 : 1,
               }}
             >
               {question}
@@ -380,7 +629,8 @@ export default function ChatbotPage() {
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder="메시지를 입력하세요..."
+            disabled={isBooting}
+            placeholder={isBooting ? '챗봇을 연결하고 있어요...' : '메시지를 입력하세요...'}
             className="h-12 min-w-0 flex-1 rounded-full border px-5 text-[15px] font-bold outline-none"
             style={{
               backgroundColor: '#F6F7F8',
@@ -392,8 +642,11 @@ export default function ChatbotPage() {
             type="submit"
             aria-label="메시지 보내기"
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.primary, opacity: input.trim() ? 1 : 0.5 }}
-            disabled={!input.trim()}
+            style={{
+              backgroundColor: colors.primary,
+              opacity: input.trim() && !isBooting && !isSending ? 1 : 0.5,
+            }}
+            disabled={!input.trim() || isBooting || isSending}
           >
             <Send size={22} color={colors.white} />
           </button>
