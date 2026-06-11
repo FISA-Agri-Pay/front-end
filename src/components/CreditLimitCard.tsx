@@ -26,7 +26,7 @@ function CreditCardBefore() {
         농지 정보와 서류를 등록하고 한도를 확인해야 합니다.
       </p>
       <button
-        onClick={() => navigate('/apply')}
+        onClick={() => navigate('/ass')}
         className="w-full mt-4 py-3 rounded-xl font-bold text-base text-white"
         style={{ backgroundColor: colors.primary }}
       >
