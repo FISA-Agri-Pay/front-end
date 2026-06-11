@@ -7,6 +7,7 @@ import logoImg from '../assets/app_logo_title.png';
 import CreditLimitCard, { type CreditStatus } from '../components/CreditLimitCard';
 import { getWalletCredit } from '../api/wallet';
 import type { WalletCredit } from '../types/wallet';
+import { useCreditUsages } from '../hooks/useCreditHistory';
 
 type Product = {
   id: number;
@@ -19,16 +20,6 @@ const products: Product[] = [
   { id: 1, name: '복합 비료 20kg', price: 50000, emoji: '🌿' },
   { id: 2, name: '스마트팜 센서 키트', price: 250000, emoji: '📡' },
   { id: 3, name: '최신형 트랙터 대여', price: 250000, emoji: '🚜' },
-];
-
-type Delivery = {
-  id: number;
-  itemName: string;
-  status: string;
-};
-
-const deliveries: Delivery[] = [
-  { id: 1, itemName: '복합 비료 20kg', status: '배송 중' },
 ];
 
 function toCreditStatus(credit: WalletCredit): CreditStatus {
@@ -65,6 +56,9 @@ export default function HomePage() {
   const [creditLimit, setCreditLimit] = useState(0);
   const [creditUsed, setCreditUsed] = useState(0);
   const [userName, setUserName] = useState('');
+
+  const { data: usages = [] } = useCreditUsages();
+  const shippingItems = usages.filter((u) => u.displayStatus === '배송중');
 
   useEffect(() => {
     getWalletCredit()
@@ -193,45 +187,47 @@ export default function HomePage() {
       </div>
 
       {/* 배송 상태 알림 카드 목록 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '30px 23px 0' }}>
-        {deliveries.map((delivery) => (
-          <div
-            key={delivery.id}
-            style={{
-              backgroundColor: colors.white,
-              border: '1px solid #E5E0D2',
-              borderRadius: 12,
-              height: 76,
-              display: 'flex',
-              alignItems: 'center',
-              padding: '0 12px',
-            }}
-          >
+      {shippingItems.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '30px 23px 0' }}>
+          {shippingItems.map((item) => (
             <div
-              className="flex items-center justify-center flex-shrink-0"
-              style={{ width: 42, height: 42, backgroundColor: colors.bg, borderRadius: '50%' }}
+              key={item.historyPublicId}
+              style={{
+                backgroundColor: colors.white,
+                border: '1px solid #E5E0D2',
+                borderRadius: 12,
+                height: 76,
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0 12px',
+              }}
             >
-              <Truck size={22} color={colors.text.muted} strokeWidth={2} />
-            </div>
+              <div
+                className="flex items-center justify-center shrink-0"
+                style={{ width: 42, height: 42, backgroundColor: colors.bg, borderRadius: '50%' }}
+              >
+                <Truck size={22} color={colors.text.muted} strokeWidth={2} />
+              </div>
 
-            <div style={{ flex: 1, marginLeft: 12 }}>
-              <p style={{ fontWeight: 700, fontSize: 16, lineHeight: '19px', color: colors.text.dark }}>
-                최근 주문한 '{delivery.itemName}'가
-              </p>
-              <p style={{ fontWeight: 700, fontSize: 15, lineHeight: '18px', color: colors.text.dark, marginTop: 2 }}>
-                <span style={{ color: colors.primary }}>{delivery.status}</span>입니다.
-              </p>
-            </div>
+              <div style={{ flex: 1, marginLeft: 12 }}>
+                <p style={{ fontWeight: 700, fontSize: 16, lineHeight: '19px', color: colors.text.dark }}>
+                  최근 주문한 '{item.title}'가
+                </p>
+                <p style={{ fontWeight: 700, fontSize: 15, lineHeight: '18px', color: colors.text.dark, marginTop: 2 }}>
+                  <span style={{ color: colors.primary }}>{item.displayStatus}</span>입니다.
+                </p>
+              </div>
 
-            <div
-              className="flex items-center justify-center flex-shrink-0"
-              style={{ width: 20, height: 20, borderRadius: 4 }}
-            >
-              <ChevronRight size={24} color="#CFC8B3" />
+              <div
+                className="flex items-center justify-center shrink-0"
+                style={{ width: 20, height: 20, borderRadius: 4 }}
+              >
+                <ChevronRight size={24} color="#CFC8B3" />
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex-1" />
       <BottomNav />
