@@ -434,6 +434,7 @@ export default function ChatbotPage() {
 
     async function initializeSession() {
       setIsBooting(true);
+      setSessionId(null);
       sessionStorage.removeItem(LEGACY_CHAT_SESSION_STORAGE_KEY);
 
       if (!chatUserId || !chatSessionStorageKey) {
@@ -455,6 +456,8 @@ export default function ChatbotPage() {
         if (savedSessionId) {
           const savedSession = await getFarmerChatSession(savedSessionId);
           if (savedSession.user_id !== chatUserId) {
+            if (isMounted) setSessionId(null);
+            sessionStorage.removeItem(chatSessionStorageKey);
             throw new Error('Saved chat session belongs to a different user.');
           }
           const history = await getFarmerChatMessages(savedSessionId);
@@ -481,6 +484,7 @@ export default function ChatbotPage() {
         setSessionId(session.session_id);
         setMessages([makeGreetingMessage()]);
       } catch {
+        if (isMounted) setSessionId(null);
         sessionStorage.removeItem(chatSessionStorageKey);
 
         if (!isMounted) return;
