@@ -29,6 +29,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/core-proxy/, ''),
         },
+        '/aiops-proxy': {
+          target: env.AIOPS_PROXY_TARGET || 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/aiops-proxy/, ''),
+        },
       },
     },
   }
