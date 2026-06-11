@@ -10,9 +10,10 @@ import { colors } from '../styles/colors';
 import type { ProductVisual as ProductVisualType } from '../data/shop';
 import { addToCart } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
-import { fetchUserProfile } from '../api/auth';
+import { fetchUserProfile, verifyPaymentPin } from '../api/auth';
 import type { UserProfile } from '../api/auth';
 import { getWalletCredit } from '../api/wallet';
+import { getApiErrorMessage } from '../api/error';
 
 const maskPhone = (phone: string) => {
   const d = phone.replace(/-/g, '');
@@ -42,6 +43,7 @@ export default function DirectCheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [remainingCredit, setRemainingCredit] = useState<number | null>(null);
+  const [checkoutCartItemId, setCheckoutCartItemId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchUserProfile().then(setUserProfile).catch(() => {});
@@ -54,6 +56,14 @@ export default function DirectCheckoutPage() {
 
   const { productId, productName, unitPrice, quantity, totalAmount, visual, categoryName, unit, tag, imageUrl } = state;
   const isOverLimit = remainingCredit !== null && totalAmount > remainingCredit;
+  const ensureCheckoutCartItemId = () => {
+    if (checkoutCartItemId !== null) return Promise.resolve(checkoutCartItemId);
+
+    return addToCart(productId, quantity).then((cartItem) => {
+      setCheckoutCartItemId(cartItem.cartItemId);
+      return cartItem.cartItemId;
+    });
+  };
 
   return (
     <div className="flex min-h-screen flex-col pb-24" style={{ backgroundColor: colors.bg }}>
@@ -143,7 +153,8 @@ export default function DirectCheckoutPage() {
           pin={pin}
           onChange={setPin}
           onClose={() => { if (!isSubmitting) setIsPinOpen(false); }}
-          onComplete={() => {
+          onComplete={(completedPin) => {
+            if (isSubmitting) return;
             if (isOverLimit) return;
             if (!userProfile) {
               alert('배송지 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
@@ -151,15 +162,17 @@ export default function DirectCheckoutPage() {
               return;
             }
             setIsSubmitting(true);
-            addToCart(productId, quantity)
-              .then((cartItem) =>
-                createCheckoutRequest([cartItem.cartItemId], {
-                  recipientName: userProfile.name,
-                  recipientPhone: userProfile.phone,
-                  address: userProfile.address,
-                  addressDetail: userProfile.addressDetail,
-                  zipCode: userProfile.zipCode,
-                }),
+            verifyPaymentPin(completedPin)
+              .then(({ verificationId }) =>
+                ensureCheckoutCartItemId().then((cartItemId) =>
+                  createCheckoutRequest([cartItemId], {
+                    recipientName: userProfile.name,
+                    recipientPhone: userProfile.phone,
+                    address: userProfile.address,
+                    addressDetail: userProfile.addressDetail,
+                    zipCode: userProfile.zipCode,
+                  }, verificationId),
+                ),
               )
               .then((result) => {
                 setIsPinOpen(false);
@@ -167,10 +180,10 @@ export default function DirectCheckoutPage() {
                   state: { totalAmount, checkoutRequestId: result.checkoutRequestId },
                 });
               })
-              .catch(() => {
+              .catch((error) => {
                 setIsSubmitting(false);
                 setPin('');
-                alert('결제 요청에 실패했습니다. 다시 시도해 주세요.');
+                alert(getApiErrorMessage(error, '결제 요청에 실패했습니다. 다시 시도해 주세요.'));
               });
           }}
         />

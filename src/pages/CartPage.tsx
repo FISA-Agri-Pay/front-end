@@ -11,9 +11,10 @@ import { colors } from '../styles/colors';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
 import { fetchCart, categoryToVisual, updateCartItemQuantity, deleteCartItem } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
-import { fetchUserProfile } from '../api/auth';
+import { fetchUserProfile, verifyPaymentPin } from '../api/auth';
 import type { UserProfile } from '../api/auth';
 import { getWalletCredit } from '../api/wallet';
+import { getApiErrorMessage } from '../api/error';
 
 const maskPhone = (phone: string) => {
   const d = phone.replace(/-/g, '');
@@ -248,7 +249,9 @@ export default function CartPage() {
           pin={pin}
           onChange={setPin}
           onClose={() => { if (!isSubmitting) setIsPinOpen(false); }}
-          onComplete={() => {
+          onComplete={(completedPin) => {
+            if (isSubmitting) return;
+
             const cartItemIds = lines
               .map((l) => l.cartItemId)
               .filter((id): id is number => id !== undefined);
@@ -259,14 +262,24 @@ export default function CartPage() {
               return;
             }
 
+            if (cartItemIds.length !== lines.length) {
+              alert('장바구니 정보를 다시 불러온 뒤 결제를 시도해 주세요.');
+              setPin('');
+              loadCart();
+              return;
+            }
+
             setIsSubmitting(true);
-            createCheckoutRequest(cartItemIds, {
-              recipientName: userProfile.name,
-              recipientPhone: userProfile.phone,
-              address: userProfile.address,
-              addressDetail: userProfile.addressDetail,
-              zipCode: userProfile.zipCode,
-            })
+            verifyPaymentPin(completedPin)
+              .then(({ verificationId }) =>
+                createCheckoutRequest(cartItemIds, {
+                  recipientName: userProfile.name,
+                  recipientPhone: userProfile.phone,
+                  address: userProfile.address,
+                  addressDetail: userProfile.addressDetail,
+                  zipCode: userProfile.zipCode,
+                }, verificationId),
+              )
               .then((result) => {
                 setIsPinOpen(false);
                 clearCart();
@@ -274,10 +287,10 @@ export default function CartPage() {
                   state: { totalAmount, checkoutRequestId: result.checkoutRequestId },
                 });
               })
-              .catch(() => {
+              .catch((error) => {
                 setIsSubmitting(false);
                 setPin('');
-                alert('결제 요청에 실패했습니다. 다시 시도해 주세요.');
+                alert(getApiErrorMessage(error, '결제 요청에 실패했습니다. 다시 시도해 주세요.'));
               });
           }}
         />
