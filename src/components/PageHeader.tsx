@@ -1,10 +1,12 @@
 import { ChevronLeft } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { colors } from '../styles/colors';
 
 interface PageHeaderProps {
   title: string;
   /** onBack 전달시 뒤로가기 버튼 생성 */
   onBack?: () => void;
+  rightAction?: ReactNode;
 }
 
 /**
@@ -16,7 +18,7 @@ interface PageHeaderProps {
  * @example 뒤로가기 없는 버전
  * <PageHeader title="홈" />
  */
-export default function PageHeader({ title, onBack }: PageHeaderProps) {
+export default function PageHeader({ title, onBack, rightAction }: PageHeaderProps) {
   return (
     <div
       className="relative flex items-center justify-center"
@@ -24,6 +26,8 @@ export default function PageHeader({ title, onBack }: PageHeaderProps) {
     >
       {onBack && (
         <button
+          type="button"
+          aria-label="이전 페이지로 이동"
           onClick={onBack}
           className="absolute left-4 flex items-center justify-center"
           style={{ padding: 4 }}
@@ -41,6 +45,7 @@ export default function PageHeader({ title, onBack }: PageHeaderProps) {
       >
         {title}
       </h1>
+      {rightAction && <div className="absolute right-4 flex items-center justify-center">{rightAction}</div>}
     </div>
   );
 }
