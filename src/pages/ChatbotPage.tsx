@@ -11,6 +11,7 @@ import {
   getFarmerChatMessages,
   getFarmerChatSession,
 } from '../api/chatbot';
+import { tokenStorage } from '../api/tokenStorage';
 import type { ChatMessageResponse, ChatUiCard } from '../types/chatbot';
 
 type ChatCard =
@@ -64,9 +65,8 @@ type ChatMessage = {
 };
 
 const quickQuestions = ['비료 추천해줘', '배송 현황 조회', '스마트팜 센서 문의'];
-const CHAT_SESSION_STORAGE_KEY = 'farmerChatSessionId';
-const CHAT_USER_ID =
-  ((import.meta.env.VITE_AIOPS_FARMER_USER_ID as string | undefined)?.trim()) || 'anonymous';
+const LEGACY_CHAT_SESSION_STORAGE_KEY = 'farmerChatSessionId';
+const CHAT_SESSION_STORAGE_KEY_PREFIX = 'farmerChatSessionId:';
 
 const currencyFormatter = new Intl.NumberFormat('ko-KR');
 
@@ -196,6 +196,10 @@ function getHttpStatus(error: unknown) {
 
   const response = (error as { response?: { status?: unknown } }).response;
   return typeof response?.status === 'number' ? response.status : undefined;
+}
+
+function getChatSessionStorageKey(userId: string) {
+  return `${CHAT_SESSION_STORAGE_KEY_PREFIX}${userId}`;
 }
 
 function AssistantAvatar() {
@@ -417,6 +421,8 @@ export default function ChatbotPage() {
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const localMessageIdRef = useRef(0);
+  const chatUserId = tokenStorage.getUserPublicId();
+  const chatSessionStorageKey = chatUserId ? getChatSessionStorageKey(chatUserId) : null;
 
   const createLocalMessageId = (prefix: string) => {
     localMessageIdRef.current += 1;
@@ -428,12 +434,29 @@ export default function ChatbotPage() {
 
     async function initializeSession() {
       setIsBooting(true);
+      sessionStorage.removeItem(LEGACY_CHAT_SESSION_STORAGE_KEY);
 
-      const savedSessionId = sessionStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+      if (!chatUserId || !chatSessionStorageKey) {
+        setSessionId(null);
+        setMessages([
+          makeGreetingMessage(),
+          makeErrorMessage(
+            'local-auth-error',
+            '사용자 정보를 확인하지 못했습니다. 다시 로그인한 뒤 이용해 주세요.',
+          ),
+        ]);
+        setIsBooting(false);
+        return;
+      }
+
+      const savedSessionId = sessionStorage.getItem(chatSessionStorageKey);
 
       try {
         if (savedSessionId) {
-          await getFarmerChatSession(savedSessionId);
+          const savedSession = await getFarmerChatSession(savedSessionId);
+          if (savedSession.user_id !== chatUserId) {
+            throw new Error('Saved chat session belongs to a different user.');
+          }
           const history = await getFarmerChatMessages(savedSessionId);
 
           if (!isMounted) return;
@@ -448,17 +471,17 @@ export default function ChatbotPage() {
         }
 
         const session = await createFarmerChatSession({
-          user_id: CHAT_USER_ID,
+          user_id: chatUserId,
           title: '콩콩팥팥 도우미',
         });
 
         if (!isMounted) return;
 
-        sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, session.session_id);
+        sessionStorage.setItem(chatSessionStorageKey, session.session_id);
         setSessionId(session.session_id);
         setMessages([makeGreetingMessage()]);
       } catch {
-        sessionStorage.removeItem(CHAT_SESSION_STORAGE_KEY);
+        sessionStorage.removeItem(chatSessionStorageKey);
 
         if (!isMounted) return;
 
@@ -479,21 +502,25 @@ export default function ChatbotPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [chatSessionStorageKey, chatUserId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: 'end' });
   }, [messages, isSending]);
 
   const ensureSession = async () => {
+    if (!chatUserId || !chatSessionStorageKey) {
+      throw new Error('Chat user id is missing.');
+    }
+
     if (sessionId) return sessionId;
 
     const session = await createFarmerChatSession({
-      user_id: CHAT_USER_ID,
+      user_id: chatUserId,
       title: '콩콩팥팥 도우미',
     });
 
-    sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, session.session_id);
+    sessionStorage.setItem(chatSessionStorageKey, session.session_id);
     setSessionId(session.session_id);
     return session.session_id;
   };
@@ -501,6 +528,17 @@ export default function ChatbotPage() {
   const sendMessage = async (message: string) => {
     const trimmed = message.trim();
     if (!trimmed || isSending) return;
+
+    if (!chatUserId) {
+      setMessages((current) => [
+        ...current,
+        makeErrorMessage(
+          createLocalMessageId('local-auth-error'),
+          '사용자 정보를 확인하지 못했습니다. 다시 로그인한 뒤 이용해 주세요.',
+        ),
+      ]);
+      return;
+    }
 
     const localUserMessage: ChatMessage = {
       id: createLocalMessageId('local-user'),
@@ -518,11 +556,13 @@ export default function ChatbotPage() {
       const response = await askFarmerChat({
         message: trimmed,
         session_id: currentSessionId,
-        user_id: CHAT_USER_ID,
+        user_id: chatUserId,
       });
 
       setSessionId(response.session.session_id);
-      sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, response.session.session_id);
+      if (chatSessionStorageKey) {
+        sessionStorage.setItem(chatSessionStorageKey, response.session.session_id);
+      }
 
       setMessages((current) => [
         ...current,
