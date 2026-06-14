@@ -22,6 +22,8 @@ import {
   type PhoneTermKey,
 } from '../constants/signupPhoneTerms';
 import { useRegister } from '../hooks/useAuth';
+import { login, registerPaymentPin } from '../api/auth';
+import { tokenStorage } from '../api/tokenStorage';
 import type { RegisterRequest } from '../types/auth';
 import type { ApiResponse } from '../types/credit';
 
@@ -321,6 +323,14 @@ export default function SignupPage() {
 
     try {
       await registerMutation.mutateAsync(payload);
+
+      // 결제 PIN 등록은 인증된 사용자만 가능 → 가입 직후 로그인하여 토큰 확보
+      const { accessToken } = await login({
+        phone: payload.phone,
+        password: payload.password,
+      });
+      tokenStorage.set(accessToken);
+      await registerPaymentPin(confirmedPin);
 
       setRegisterCompleted(true);
       navigate(STEP_PATHS.complete, { state: { registered: true } });
