@@ -321,31 +321,17 @@ export default function SignupPage() {
       password: formData.account.password,
     };
 
+    // ── 1단계: 회원가입 ────────────────────────────────────────────────────────
     try {
       await registerMutation.mutateAsync(payload);
-
-      // 결제 PIN 등록은 인증된 사용자만 가능 → 가입 직후 로그인하여 토큰 확보
-      const { accessToken } = await login({
-        phone: payload.phone,
-        password: payload.password,
-      });
-      tokenStorage.set(accessToken);
-
-      // 가입·로그인이 끝나면 재시도 시 중복 가입(409)이 되므로 더 이상 register를 타지 않는다.
+      // 계정이 생성된 즉시 완료 상태를 확정한다.
+      // 이 시점 이후 어떤 단계가 실패하더라도 register를 재호출하지 않는다(→ 409 방지).
       setRegisterCompleted(true);
       setRegisterError('');
-
-      // PIN 등록이 실패해도 가입 자체는 완료 처리
-      // (추후 로그인 시 isPinSet === false 로 재등록을 유도)
-      try {
-        await registerPaymentPin(confirmedPin);
-      } catch {
-        // 가입은 됐으므로 무시하고 완료 화면으로 진행
-      }
-      navigate(STEP_PATHS.complete, { state: { registered: true } });
     } catch (err) {
       const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
       setRegisterError(msg);
+      return;
     } finally {
       setFormData((prev) => ({
         ...prev,
@@ -360,6 +346,30 @@ export default function SignupPage() {
         },
       }));
     }
+
+    // ── 2단계: 로그인(토큰 확보) ───────────────────────────────────────────────
+    // payload는 try 이전에 빌드되어 finally의 formData 초기화에 영향받지 않는다.
+    try {
+      const { accessToken } = await login({
+        phone: payload.phone,
+        password: payload.password,
+      });
+      tokenStorage.set(accessToken);
+    } catch {
+      // 가입은 완료됐으므로 로그인 화면으로 보낸다.
+      // 로그인 후 isPinSet === false 이므로 /payment-pin-setup으로 자동 유도된다.
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    // ── 3단계: 결제 PIN 등록 ──────────────────────────────────────────────────
+    // 실패해도 가입은 완료 처리 (로그인 시 isPinSet === false 로 복구 경로 진입)
+    try {
+      await registerPaymentPin(confirmedPin);
+    } catch {
+      // intentional: 가입 완료로 진행
+    }
+    navigate(STEP_PATHS.complete, { state: { registered: true } });
   };
 
   if (currentDetail) {
