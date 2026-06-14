@@ -330,11 +330,19 @@ export default function SignupPage() {
         password: payload.password,
       });
       tokenStorage.set(accessToken);
-      await registerPaymentPin(confirmedPin);
 
+      // 가입·로그인이 끝나면 재시도 시 중복 가입(409)이 되므로 더 이상 register를 타지 않는다.
       setRegisterCompleted(true);
-      navigate(STEP_PATHS.complete, { state: { registered: true } });
       setRegisterError('');
+
+      // PIN 등록이 실패해도 가입 자체는 완료 처리
+      // (추후 로그인 시 isPinSet === false 로 재등록을 유도)
+      try {
+        await registerPaymentPin(confirmedPin);
+      } catch {
+        // 가입은 됐으므로 무시하고 완료 화면으로 진행
+      }
+      navigate(STEP_PATHS.complete, { state: { registered: true } });
     } catch (err) {
       const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
       setRegisterError(msg);

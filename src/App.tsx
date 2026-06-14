@@ -14,6 +14,7 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import DirectCheckoutPage from './pages/DirectCheckoutPage';
 import PrivateRoute from './components/PrivateRoute';
 import ChatbotPage from './pages/ChatbotPage';
+import PaymentPinSetupPage from './pages/PaymentPinSetupPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
 
             <Route element={<PrivateRoute />}>
               <Route path="/home" element={<HomePage />} />
+              <Route path="/payment-pin-setup" element={<PaymentPinSetupPage />} />
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/product-detail/:productId" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
