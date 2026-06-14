@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Delete } from 'lucide-react';
 import { colors } from '../../styles/colors';
 import { SIGNUP_MAIN_TOP_PADDING } from '../../constants/signupLayout';
@@ -10,6 +10,8 @@ interface SignupPaymentPinProps {
   pin: string;
   errorMessage?: string;
   disabled?: boolean;
+  /** 기본값은 회원가입용 단계 헤더. 다른 화면에서 재사용 시 헤더를 직접 주입한다. */
+  header?: ReactNode;
   onChange: (pin: string) => void;
   onComplete: (pin: string) => void;
   onBack: () => void;
@@ -23,6 +25,7 @@ export default function SignupPaymentPin({
   pin,
   errorMessage,
   disabled,
+  header,
   onChange,
   onComplete,
   onBack,
@@ -61,7 +64,7 @@ export default function SignupPaymentPin({
 
   return (
     <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
-      <SignupStepHeader title="간편 비밀번호 등록" activeStep={3} onBack={onBack} />
+      {header ?? <SignupStepHeader title="간편 비밀번호 등록" activeStep={3} onBack={onBack} />}
 
       <main className="flex-1 px-6" style={{ paddingTop: SIGNUP_MAIN_TOP_PADDING }}>
         <h2

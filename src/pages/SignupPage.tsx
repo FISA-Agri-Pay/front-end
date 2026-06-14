@@ -22,6 +22,8 @@ import {
   type PhoneTermKey,
 } from '../constants/signupPhoneTerms';
 import { useRegister } from '../hooks/useAuth';
+import { login, registerPaymentPin } from '../api/auth';
+import { tokenStorage } from '../api/tokenStorage';
 import type { RegisterRequest } from '../types/auth';
 import type { ApiResponse } from '../types/credit';
 
@@ -319,15 +321,17 @@ export default function SignupPage() {
       password: formData.account.password,
     };
 
+    // ── 1단계: 회원가입 ────────────────────────────────────────────────────────
     try {
       await registerMutation.mutateAsync(payload);
-
+      // 계정이 생성된 즉시 완료 상태를 확정한다.
+      // 이 시점 이후 어떤 단계가 실패하더라도 register를 재호출하지 않는다(→ 409 방지).
       setRegisterCompleted(true);
-      navigate(STEP_PATHS.complete, { state: { registered: true } });
       setRegisterError('');
     } catch (err) {
       const msg = formatRegisterError(err as AxiosError<ApiResponse<null>>);
       setRegisterError(msg);
+      return;
     } finally {
       setFormData((prev) => ({
         ...prev,
@@ -342,6 +346,30 @@ export default function SignupPage() {
         },
       }));
     }
+
+    // ── 2단계: 로그인(토큰 확보) ───────────────────────────────────────────────
+    // payload는 try 이전에 빌드되어 finally의 formData 초기화에 영향받지 않는다.
+    try {
+      const { accessToken } = await login({
+        phone: payload.phone,
+        password: payload.password,
+      });
+      tokenStorage.set(accessToken);
+    } catch {
+      // 가입은 완료됐으므로 로그인 화면으로 보낸다.
+      // 로그인 후 isPinSet === false 이므로 /payment-pin-setup으로 자동 유도된다.
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    // ── 3단계: 결제 PIN 등록 ──────────────────────────────────────────────────
+    // 실패해도 가입은 완료 처리 (로그인 시 isPinSet === false 로 복구 경로 진입)
+    try {
+      await registerPaymentPin(confirmedPin);
+    } catch {
+      // intentional: 가입 완료로 진행
+    }
+    navigate(STEP_PATHS.complete, { state: { registered: true } });
   };
 
   if (currentDetail) {

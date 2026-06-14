@@ -37,7 +37,8 @@ export default function LoginPage() {
 
       if (res.status === 'SUCCESS' && res.data) {
         tokenStorage.set(res.data.accessToken);
-        navigate('/home');
+        // 결제 PIN 미등록 사용자는 등록 화면으로 유도 (가입 중 PIN 등록 누락 복구)
+        navigate(res.data.isPinSet ? '/home' : '/payment-pin-setup', { replace: true });
       } else {
         setErrorMsg(res.message ?? '로그인에 실패했습니다.');
       }
