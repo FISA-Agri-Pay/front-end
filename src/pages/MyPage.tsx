@@ -77,6 +77,11 @@ export default function MyPage() {
     fetchUserProfile().then(setUserProfile).catch(() => {});
   }, []);
 
+  const handleLogout = () => {
+    tokenStorage.clear();
+    navigate('/', { replace: true });
+  };
+
   const openWithdraw = () => {
     setWithdrawError('');
     setIsWithdrawOpen(true);
@@ -152,7 +157,7 @@ export default function MyPage() {
 
       {/* 로그아웃 / 회원 탈퇴 */}
       <div className="flex items-center justify-center gap-4 mt-6">
-        <button className="text-[13px]" style={{ color: colors.text.muted }}>
+        <button className="text-[13px]" style={{ color: colors.text.muted }} onClick={handleLogout}>
           로그아웃
         </button>
         <span className="text-[13px]" style={{ color: '#D0CAB8' }}>|</span>
