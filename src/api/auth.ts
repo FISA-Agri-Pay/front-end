@@ -60,6 +60,10 @@ export async function updateUserProfile(body: UpdateUserProfileRequest): Promise
   return data.data;
 }
 
+export async function withdrawUser(password: string): Promise<void> {
+  await client.delete<ApiResponse<null>>(ENDPOINTS.ME, { data: { password } });
+}
+
 export async function verifyPaymentPin(pin: string): Promise<PaymentPinVerification> {
   const { data } = await client.post<ApiResponse<PaymentPinVerification>>(ENDPOINTS.PAYMENT_PIN_VERIFY, {
     pin,
