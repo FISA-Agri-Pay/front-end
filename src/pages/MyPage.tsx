@@ -99,6 +99,7 @@ export default function MyPage() {
           <button
             className="px-3 py-[5px] rounded-lg text-[12px] font-bold flex-shrink-0"
             style={{ backgroundColor: '#F0EDE5', color: colors.text.mid }}
+            onClick={() => navigate('/mypage/edit')}
           >
             정보 수정
           </button>

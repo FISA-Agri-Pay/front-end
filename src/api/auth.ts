@@ -25,6 +25,12 @@ export interface UserProfile {
   zipCode: string;
 }
 
+export interface UpdateUserProfileRequest {
+  address: string;
+  addressDetail: string;
+  zipCode: string;
+}
+
 export interface PaymentPinVerification {
   verificationId: string;
   expiresAt: string;
@@ -46,6 +52,11 @@ export async function registerPaymentPin(pin: string): Promise<void> {
 
 export async function fetchUserProfile(): Promise<UserProfile> {
   const { data } = await client.get<ApiResponse<UserProfile>>(ENDPOINTS.ME);
+  return data.data;
+}
+
+export async function updateUserProfile(body: UpdateUserProfileRequest): Promise<UserProfile> {
+  const { data } = await client.put<ApiResponse<UserProfile>>(ENDPOINTS.ME, body);
   return data.data;
 }
 
