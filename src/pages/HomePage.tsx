@@ -143,6 +143,7 @@ export default function HomePage() {
               <ProductVisual
                 visual={categoryToVisual(p.categoryName)}
                 size="sm"
+                height={104}
                 imageUrl={p.imageUrl ?? undefined}
               />
             </div>
@@ -159,7 +160,7 @@ export default function HomePage() {
                   fontSize: 14,
                   lineHeight: '16px',
                   color: colors.primary,
-                  marginTop: 4,
+                  marginTop: 8,
                 }}
               >
                 {p.price.toLocaleString()}원
