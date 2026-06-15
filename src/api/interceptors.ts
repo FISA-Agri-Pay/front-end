@@ -3,6 +3,14 @@ import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'a
 import { tokenStorage } from './tokenStorage';
 import { AUTH_BASE_URL } from './config';
 
+// 비핵심 요청(예: 홈 추천 상품)이 401을 받아도 전역 refresh/로그아웃을
+// 유발하지 않도록 하는 옵트아웃 플래그.
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    skipAuthHandling?: boolean;
+  }
+}
+
 // ─── 타입 ────────────────────────────────────────────────────────────────────
 
 interface RefreshApiResponse {
@@ -58,6 +66,11 @@ export function applyInterceptors(instance: AxiosInstance): void {
       const config = error.config as RetryConfig | undefined;
 
       if (!config || error.response?.status !== 401 || config._retry) {
+        return Promise.reject(error);
+      }
+
+      // 비핵심 요청은 401이어도 refresh/로그아웃을 타지 않고 그대로 실패시킨다.
+      if (config.skipAuthHandling) {
         return Promise.reject(error);
       }
 
