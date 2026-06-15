@@ -5,22 +5,13 @@ import BottomNav from '../components/BottomNav';
 import { colors } from '../styles/colors';
 import logoImg from '../assets/app_logo_title.png';
 import CreditLimitCard, { type CreditStatus } from '../components/CreditLimitCard';
+import ProductVisual from '../components/shop/ProductVisual';
 import { getWalletCredit } from '../api/wallet';
+import { fetchRecommendedProducts } from '../api/shop';
+import type { ApiProduct } from '../api/shop';
+import { categoryToVisual } from '../api/cart';
 import type { WalletCredit } from '../types/wallet';
 import { useCreditUsages } from '../hooks/useCreditHistory';
-
-type Product = {
-  id: number;
-  name: string;
-  price: number;
-  emoji: string;
-};
-
-const products: Product[] = [
-  { id: 1, name: '복합 비료 20kg', price: 50000, emoji: '🌿' },
-  { id: 2, name: '스마트팜 센서 키트', price: 250000, emoji: '📡' },
-  { id: 3, name: '최신형 트랙터 대여', price: 250000, emoji: '🚜' },
-];
 
 function toCreditStatus(credit: WalletCredit): CreditStatus {
   if (credit.hasActiveLimit) return 'completed';
@@ -57,6 +48,8 @@ export default function HomePage() {
   const [creditUsed, setCreditUsed] = useState(0);
   const [userName, setUserName] = useState('');
 
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+
   const { data: usages = [] } = useCreditUsages();
   const shippingItems = usages.filter((u) => u.displayStatus === '배송중');
 
@@ -69,6 +62,12 @@ export default function HomePage() {
         setUserName(credit.name);
       })
       .catch(() => { setCreditStatus('before'); });
+  }, []);
+
+  useEffect(() => {
+    fetchRecommendedProducts()
+      .then(setProducts)
+      .catch(() => setProducts([]));
   }, []);
 
   return (
@@ -127,9 +126,10 @@ export default function HomePage() {
         style={{ paddingLeft: 21, gap: 10, scrollbarWidth: 'none' }}
       >
         {products.map((p) => (
-          <div
-            key={p.id}
-            className="flex-shrink-0"
+          <button
+            key={p.productId}
+            type="button"
+            className="flex-shrink-0 text-left"
             style={{
               width: 128,
               backgroundColor: colors.white,
@@ -137,18 +137,14 @@ export default function HomePage() {
               borderRadius: 12,
               paddingBottom: 10,
             }}
+            onClick={() => navigate(`/product-detail/${p.productId}`)}
           >
-            <div
-              className="flex items-center justify-center"
-              style={{
-                margin: '9px 9px 8px',
-                height: 104,
-                backgroundColor: '#F1EFEA',
-                borderRadius: 8,
-                fontSize: 36,
-              }}
-            >
-              {p.emoji}
+            <div style={{ margin: '9px 9px 8px' }}>
+              <ProductVisual
+                visual={categoryToVisual(p.categoryName)}
+                size="sm"
+                imageUrl={p.imageUrl ?? undefined}
+              />
             </div>
             <div style={{ paddingLeft: 12, paddingRight: 10 }}>
               <p style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}>
@@ -182,7 +178,7 @@ export default function HomePage() {
                 </div>
               </div>
             )}
-          </div>
+          </button>
         ))}
         <div style={{ minWidth: 21, flexShrink: 0 }} />
       </div>
