@@ -143,11 +143,15 @@ export default function HomePage() {
               <ProductVisual
                 visual={categoryToVisual(p.categoryName)}
                 size="sm"
+                height={104}
                 imageUrl={p.imageUrl ?? undefined}
               />
             </div>
             <div style={{ paddingLeft: 12, paddingRight: 10 }}>
-              <p style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}>
+              <p
+                className="truncate"
+                style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}
+              >
                 {p.name}
               </p>
               <p
@@ -155,8 +159,8 @@ export default function HomePage() {
                   fontWeight: 700,
                   fontSize: 14,
                   lineHeight: '16px',
-                  color: colors.text.dark,
-                  marginTop: 4,
+                  color: colors.primary,
+                  marginTop: 8,
                 }}
               >
                 {p.price.toLocaleString()}원

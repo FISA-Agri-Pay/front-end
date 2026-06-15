@@ -6,6 +6,8 @@ interface ProductVisualProps {
   visual: ProductVisualType;
   size?: 'sm' | 'md' | 'lg';
   imageUrl?: string;
+  /** size 프리셋의 높이를 덮어쓰고 싶을 때(px) */
+  height?: number;
 }
 
 const visualMeta = {
@@ -20,14 +22,14 @@ const sizeMeta = {
   lg: { height: 280, iconSize: 84, radius: 0 },
 } as const;
 
-export default function ProductVisual({ visual, size = 'sm', imageUrl }: ProductVisualProps) {
+export default function ProductVisual({ visual, size = 'sm', imageUrl, height }: ProductVisualProps) {
   const { Icon, bg, fg } = visualMeta[visual];
-  const { height, iconSize, radius } = sizeMeta[size];
+  const { height: presetHeight, iconSize, radius } = sizeMeta[size];
 
   return (
     <div
       className="shrink-0 overflow-hidden"
-      style={{ width: '100%', height, borderRadius: radius, background: bg }}
+      style={{ width: '100%', height: height ?? presetHeight, borderRadius: radius, background: bg }}
     >
       {imageUrl ? (
         <img src={imageUrl} alt="" className="h-full w-full object-cover" />
