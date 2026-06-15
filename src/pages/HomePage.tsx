@@ -147,7 +147,10 @@ export default function HomePage() {
               />
             </div>
             <div style={{ paddingLeft: 12, paddingRight: 10 }}>
-              <p style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}>
+              <p
+                className="truncate"
+                style={{ fontWeight: 700, fontSize: 12, lineHeight: '16px', color: colors.text.dark }}
+              >
                 {p.name}
               </p>
               <p
@@ -155,7 +158,7 @@ export default function HomePage() {
                   fontWeight: 700,
                   fontSize: 14,
                   lineHeight: '16px',
-                  color: colors.text.dark,
+                  color: colors.primary,
                   marginTop: 4,
                 }}
               >
