@@ -3,9 +3,13 @@ import { ChevronRight, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import PageHeader from '../components/PageHeader';
+import WithdrawSheet from '../components/WithdrawSheet';
 import { colors } from '../styles/colors';
-import { fetchUserProfile } from '../api/auth';
+import { fetchUserProfile, withdrawUser } from '../api/auth';
 import type { UserProfile } from '../api/auth';
+import { tokenStorage } from '../api/tokenStorage';
+import type { AxiosError } from 'axios';
+import type { ApiResponse } from '../types/credit';
 
 const maskPhone = (phone: string) => {
   const d = phone.replace(/-/g, '');
@@ -65,10 +69,42 @@ function MenuCard({ items }: { items: MenuItem[] }) {
 export default function MyPage() {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState('');
 
   useEffect(() => {
     fetchUserProfile().then(setUserProfile).catch(() => {});
   }, []);
+
+  const handleLogout = () => {
+    tokenStorage.clear();
+    navigate('/', { replace: true });
+  };
+
+  const openWithdraw = () => {
+    setWithdrawError('');
+    setIsWithdrawOpen(true);
+  };
+
+  const handleWithdraw = async (password: string) => {
+    setWithdrawing(true);
+    setWithdrawError('');
+    try {
+      await withdrawUser(password);
+      tokenStorage.clear();
+      navigate('/', { replace: true });
+    } catch (err) {
+      const status = (err as AxiosError<ApiResponse<null>>).response?.status;
+      const message = (err as AxiosError<ApiResponse<null>>).response?.data?.message;
+      setWithdrawError(
+        status === 400 || status === 401
+          ? '비밀번호가 일치하지 않습니다.'
+          : message ?? '회원 탈퇴에 실패했습니다. 다시 시도해 주세요.',
+      );
+      setWithdrawing(false);
+    }
+  };
 
   const settingsMenu: MenuItem[] = [
     { id: 1, label: '간편 비밀번호 / 생체인증 관리' },
@@ -99,6 +135,7 @@ export default function MyPage() {
           <button
             className="px-3 py-[5px] rounded-lg text-[12px] font-bold flex-shrink-0"
             style={{ backgroundColor: '#F0EDE5', color: colors.text.mid }}
+            onClick={() => navigate('/mypage/edit')}
           >
             정보 수정
           </button>
@@ -120,17 +157,26 @@ export default function MyPage() {
 
       {/* 로그아웃 / 회원 탈퇴 */}
       <div className="flex items-center justify-center gap-4 mt-6">
-        <button className="text-[13px]" style={{ color: colors.text.muted }}>
+        <button className="text-[13px]" style={{ color: colors.text.muted }} onClick={handleLogout}>
           로그아웃
         </button>
         <span className="text-[13px]" style={{ color: '#D0CAB8' }}>|</span>
-        <button className="text-[13px]" style={{ color: colors.text.muted }}>
+        <button className="text-[13px]" style={{ color: colors.text.muted }} onClick={openWithdraw}>
           회원 탈퇴
         </button>
       </div>
 
       <div className="flex-1" />
       <BottomNav />
+
+      {isWithdrawOpen && (
+        <WithdrawSheet
+          onClose={() => setIsWithdrawOpen(false)}
+          onConfirm={handleWithdraw}
+          submitting={withdrawing}
+          errorMessage={withdrawError}
+        />
+      )}
     </div>
   );
 }
