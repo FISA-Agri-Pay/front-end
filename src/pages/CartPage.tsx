@@ -4,12 +4,11 @@ import { Lightbulb, MapPin, X } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import Button from '../components/Button';
 import ProductVisual from '../components/shop/ProductVisual';
-import QuantityStepper from '../components/shop/QuantityStepper';
 import CreditSummaryCard from '../components/shop/CreditSummaryCard';
 import PaymentPinSheet from '../components/shop/PaymentPinSheet';
 import { colors } from '../styles/colors';
 import { selectCartLines, useCartStore } from '../stores/cartStore';
-import { fetchCart, categoryToVisual, updateCartItemQuantity, deleteCartItem } from '../api/cart';
+import { fetchCart, categoryToVisual, deleteCartItem } from '../api/cart';
 import { createCheckoutRequest } from '../api/checkout';
 import { fetchUserProfile, verifyPaymentPin } from '../api/auth';
 import type { UserProfile } from '../api/auth';
@@ -25,7 +24,6 @@ export default function CartPage() {
   const navigate = useNavigate();
   const items = useCartStore((state) => state.items);
   const removeItem = useCartStore((state) => state.removeItem);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
   const syncFromServer = useCartStore((state) => state.syncFromServer);
   const lines = useMemo(() => selectCartLines(items), [items]);
@@ -139,50 +137,49 @@ export default function CartPage() {
                   className="rounded-[14px] bg-white p-4"
                   style={{ border: '1px solid #E5E0D2' }}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-extrabold leading-5" style={{ color: colors.text.dark }}>
-                        {snapshot.name}{snapshot.tag ? ` (${snapshot.tag})` : ""}
+                  <div className="flex gap-3">
+                    <div className="flex w-[92px] shrink-0 items-center">
+                      <ProductVisual visual={snapshot.visual} imageUrl={snapshot.imageUrl ?? undefined} />
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex items-start justify-between gap-2">
+                        {snapshot.categoryName ? (
+                          <span
+                            className="inline-flex self-start rounded-[5px] px-2 py-0.5 text-[11px] font-bold"
+                            style={{ backgroundColor: colors.subGreen, color: colors.primary }}
+                          >
+                            {snapshot.categoryName}
+                          </span>
+                        ) : (
+                          <span />
+                        )}
+                        <button
+                          type="button"
+                          aria-label={`${snapshot.name} 삭제`}
+                          onClick={() => {
+                            if (cartItemId === undefined) {
+                              console.error('cartItemId missing, resyncing from server');
+                              loadCart();
+                              return;
+                            }
+                            removeItem(productId);
+                            deleteCartItem(cartItemId).catch(() => loadCart());
+                          }}
+                          className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center"
+                        >
+                          <X size={20} color={colors.text.muted} />
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[15px] font-extrabold leading-5" style={{ color: colors.text.dark }}>
+                        {snapshot.name}{snapshot.tag ? ` (${snapshot.tag})` : ''}
                       </p>
-                      <p className="mt-3 text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
+                      <p className="mt-1 text-[13px]" style={{ color: colors.text.muted }}>
+                        {snapshot.price.toLocaleString()}원 / {snapshot.unit} × {quantity}개
+                      </p>
+                      <div className="flex-1" />
+                      <p className="mt-2 text-right text-[17px] font-extrabold" style={{ color: colors.text.dark }}>
                         {lineTotal.toLocaleString()}원
                       </p>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label={`${snapshot.name} 삭제`}
-                      onClick={() => {
-                        if (cartItemId === undefined) {
-                          console.error('cartItemId missing, resyncing from server');
-                          loadCart();
-                          return;
-                        }
-                        removeItem(productId);
-                        deleteCartItem(cartItemId).catch(() => loadCart());
-                      }}
-                      className="flex h-8 w-8 items-center justify-center"
-                    >
-                      <X size={20} color={colors.text.muted} />
-                    </button>
-                  </div>
-                  <div className="mt-3 grid grid-cols-[92px_1fr] gap-4">
-                    <ProductVisual visual={snapshot.visual} imageUrl={snapshot.imageUrl ?? undefined} />
-                    <div className="self-end">
-                      <QuantityStepper
-                        value={quantity}
-                        onChange={(nextQuantity) => {
-                          if (cartItemId === undefined) {
-                            console.error('cartItemId missing, resyncing from server');
-                            loadCart();
-                            return;
-                          }
-                          updateQuantity(productId, nextQuantity);
-                          updateCartItemQuantity(cartItemId, nextQuantity).catch(() => {
-                            updateQuantity(productId, quantity);
-                            alert('수량 변경에 실패했습니다. 다시 시도해 주세요.');
-                          });
-                        }}
-                      />
                     </div>
                   </div>
                 </article>
@@ -284,7 +281,7 @@ export default function CartPage() {
                 setIsPinOpen(false);
                 clearCart();
                 navigate('/checkout-success', {
-                  state: { totalAmount, checkoutRequestId: result.checkoutRequestId },
+                  state: { totalAmount, orderPublicId: result.orderPublicId },
                 });
               })
               .catch((error) => {
