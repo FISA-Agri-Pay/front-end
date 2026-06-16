@@ -165,7 +165,7 @@ export default function AssDocuments({
         })}
       </div>
 
-      <div style={{ padding: '16px 20px 32px' }}>
+      <div style={{ padding: '16px 20px 32px', position: 'sticky', bottom: 0, backgroundColor: colors.bg }}>
         {errorMsg && (
           <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
             {errorMsg}
