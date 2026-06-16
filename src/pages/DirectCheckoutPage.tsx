@@ -177,7 +177,7 @@ export default function DirectCheckoutPage() {
               .then((result) => {
                 setIsPinOpen(false);
                 navigate('/checkout-success', {
-                  state: { totalAmount, checkoutRequestId: result.checkoutRequestId },
+                  state: { totalAmount, orderPublicId: result.orderPublicId },
                 });
               })
               .catch((error) => {

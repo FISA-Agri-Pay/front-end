@@ -281,7 +281,7 @@ export default function CartPage() {
                 setIsPinOpen(false);
                 clearCart();
                 navigate('/checkout-success', {
-                  state: { totalAmount, checkoutRequestId: result.checkoutRequestId },
+                  state: { totalAmount, orderPublicId: result.orderPublicId },
                 });
               })
               .catch((error) => {
