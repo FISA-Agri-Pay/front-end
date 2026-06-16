@@ -60,7 +60,7 @@ export default function AssDocuments({
   );
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
+    <div className="flex flex-col h-dvh" style={{ backgroundColor: colors.bg }}>
       <AssStepHeader title="서류 제출" step={4} onBack={onBack} />
 
       <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 16, marginBottom: 28 }}>
@@ -77,7 +77,7 @@ export default function AssDocuments({
         </h1>
       </div>
 
-      <div className="flex-1 flex flex-col gap-5" style={{ paddingLeft: 20, paddingRight: 20 }}>
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-5" style={{ paddingLeft: 20, paddingRight: 20 }}>
         {DOCUMENTS.map(({ id, label, defaultRequired }) => {
           const docFile = docs[id];
           const isDone = !!docFile;
@@ -165,7 +165,7 @@ export default function AssDocuments({
         })}
       </div>
 
-      <div style={{ padding: '16px 20px 32px' }}>
+      <div className="shrink-0" style={{ padding: '16px 20px 32px' }}>
         {errorMsg && (
           <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
             {errorMsg}

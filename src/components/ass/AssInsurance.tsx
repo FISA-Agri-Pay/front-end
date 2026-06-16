@@ -54,7 +54,7 @@ export default function AssInsurance({
   };
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
+    <div className="flex flex-col h-dvh" style={{ backgroundColor: colors.bg }}>
       <AssStepHeader title="보험 가입 유무" step={3} onBack={onBack} />
 
       <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 16, marginBottom: 28 }}>
@@ -72,7 +72,7 @@ export default function AssInsurance({
       </div>
 
       <div
-        className="flex-1 flex flex-col gap-3"
+        className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3"
         style={{ paddingLeft: 20, paddingRight: 20 }}
         role="radiogroup"
         aria-label="농작물 재해보험 가입 여부"
@@ -133,7 +133,7 @@ export default function AssInsurance({
         })}
       </div>
 
-      <div style={{ padding: '16px 20px 32px' }}>
+      <div className="shrink-0" style={{ padding: '16px 20px 32px' }}>
         {errorMsg && (
           <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
             {errorMsg}

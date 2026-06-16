@@ -28,7 +28,7 @@ export default function AssIntro({ onNext, loading, errorMsg }: AssIntroProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
+    <div className="flex flex-col h-dvh" style={{ backgroundColor: colors.bg }}>
       <PageHeader title="한도 산정" onBack={() => navigate(-1)} />
 
       {/* 안내 문구 */}
@@ -47,7 +47,7 @@ export default function AssIntro({ onNext, loading, errorMsg }: AssIntroProps) {
       </div>
 
       {/* 단계 목록 */}
-      <div className="flex-1" style={{ paddingLeft: 32, paddingRight: 20 }}>
+      <div className="flex-1 min-h-0 overflow-y-auto" style={{ paddingLeft: 32, paddingRight: 20 }}>
         {STEPS.map(({ id, label, icon: Icon, sub, filled }, i) => (
           <div key={id}>
             {/* 아이템 행 */}
@@ -89,7 +89,7 @@ export default function AssIntro({ onNext, loading, errorMsg }: AssIntroProps) {
       </div>
 
       {/* 하단 버튼 */}
-      <div style={{ padding: '16px 20px 32px' }}>
+      <div className="shrink-0" style={{ padding: '16px 20px 32px' }}>
         {errorMsg && (
           <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
             {errorMsg}

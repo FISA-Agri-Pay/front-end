@@ -50,7 +50,7 @@ export default function AssCropHistory({ crop, onUpdate, onNext, onBack, loading
   };
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: colors.bg }}>
+    <div className="flex flex-col h-dvh" style={{ backgroundColor: colors.bg }}>
       <AssStepHeader title="재배 작물 이력" step={2} onBack={onBack} />
 
       <div style={{ paddingLeft: 24, paddingRight: 24, marginTop: 16, marginBottom: 24 }}>
@@ -67,7 +67,7 @@ export default function AssCropHistory({ crop, onUpdate, onNext, onBack, loading
         </h1>
       </div>
 
-      <div className="flex-1" style={{ paddingLeft: 20, paddingRight: 20 }}>
+      <div className="flex-1 min-h-0 overflow-y-auto" style={{ paddingLeft: 20, paddingRight: 20 }}>
         <div className="grid grid-cols-2 gap-3">
           {CROPS.map(({ code, label, green, gray }) => {
             const isSelected = selected === code;
@@ -105,7 +105,7 @@ export default function AssCropHistory({ crop, onUpdate, onNext, onBack, loading
         </div>
       </div>
 
-      <div style={{ padding: '16px 20px 32px' }}>
+      <div className="shrink-0" style={{ padding: '16px 20px 32px' }}>
         {errorMsg && (
           <p className="text-sm text-center mb-3" style={{ color: colors.text.danger }}>
             {errorMsg}
