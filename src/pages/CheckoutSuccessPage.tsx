@@ -37,10 +37,11 @@ export default function CheckoutSuccessPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: colors.bg }}>
+    <div className="flex h-dvh flex-col" style={{ backgroundColor: colors.bg }}>
       <PageHeader title="결제 완료" />
 
-      <main className="flex flex-1 flex-col px-5 pb-8 pt-7">
+      <main className="flex flex-1 flex-col min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 pt-7">
         <div className="flex justify-center">
           <img
             src={paymentLogo}
@@ -91,9 +92,9 @@ export default function CheckoutSuccessPage() {
           배송 및 작업 일정은 카카오톡으로 안내해 드릴게요.
         </p>
 
-        <div className="flex-1" />
+        </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 shrink-0 px-5 pb-8 pt-4">
           <Button variant="outline" onClick={goHistory}>
             주문 내역 상세보기
           </Button>
