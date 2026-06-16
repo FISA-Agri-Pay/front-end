@@ -1,6 +1,7 @@
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Check, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
+import paymentLogo from '../assets/app_logo_payment.png';
 import Button from '../components/Button';
 import { colors } from '../styles/colors';
 import { CREDIT_LIMIT } from '../data/shop';
@@ -41,12 +42,11 @@ export default function CheckoutSuccessPage() {
 
       <main className="flex flex-1 flex-col px-5 pb-8 pt-7">
         <div className="flex justify-center">
-          <div
-            className="flex h-[74px] w-[74px] items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.subGreen }}
-          >
-            <Check size={38} color={colors.primary} strokeWidth={3} />
-          </div>
+          <img
+            src={paymentLogo}
+            alt="결제 완료"
+            className="h-[88px] w-[88px] object-contain"
+          />
         </div>
 
         <h1 className="mt-7 text-center text-[21px] font-extrabold leading-[30px]" style={{ color: colors.text.dark }}>
