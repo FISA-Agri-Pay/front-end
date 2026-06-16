@@ -177,7 +177,11 @@ export default function DirectCheckoutPage() {
               .then((result) => {
                 setIsPinOpen(false);
                 navigate('/checkout-success', {
-                  state: { totalAmount, orderPublicId: result.orderPublicId },
+                  state: {
+                    totalAmount,
+                    orderPublicId: result.orderPublicId,
+                    availableLimit: remainingCredit ?? 0,
+                  },
                 });
               })
               .catch((error) => {
