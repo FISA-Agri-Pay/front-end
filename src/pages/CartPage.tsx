@@ -281,7 +281,11 @@ export default function CartPage() {
                 setIsPinOpen(false);
                 clearCart();
                 navigate('/checkout-success', {
-                  state: { totalAmount, orderPublicId: result.orderPublicId },
+                  state: {
+                    totalAmount,
+                    orderPublicId: result.orderPublicId,
+                    availableLimit: remainingCredit ?? 0,
+                  },
                 });
               })
               .catch((error) => {

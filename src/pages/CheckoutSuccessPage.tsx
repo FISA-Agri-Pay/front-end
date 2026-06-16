@@ -4,12 +4,12 @@ import PageHeader from '../components/PageHeader';
 import paymentLogo from '../assets/app_logo_payment.png';
 import Button from '../components/Button';
 import { colors } from '../styles/colors';
-import { CREDIT_LIMIT } from '../data/shop';
 import { useCartStore } from '../stores/cartStore';
 
 interface CheckoutLocationState {
   totalAmount?: number;
   orderPublicId?: string;
+  availableLimit?: number;
 }
 
 export default function CheckoutSuccessPage() {
@@ -19,7 +19,8 @@ export default function CheckoutSuccessPage() {
   const state = location.state as CheckoutLocationState | null;
   const totalAmount = state?.totalAmount ?? 0;
   const orderPublicId = state?.orderPublicId;
-  const remainingLimit = CREDIT_LIMIT - totalAmount;
+  const availableLimit = state?.availableLimit ?? 0;
+  const remainingLimit = Math.max(availableLimit - totalAmount, 0);
   const hasValidPaymentAmount = Number.isFinite(totalAmount) && totalAmount > 0;
 
   const goHome = () => {
