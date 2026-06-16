@@ -170,7 +170,7 @@ export default function ProductDetailPage() {
         <div className="mt-4" style={{ borderTop: '1.5px dashed #E5E0D2' }} />
 
         <div className="mt-4">
-          <p className="text-[15px] font-extrabold leading-6" style={{ color: colors.text.dark }}>
+          <p className="text-[15px] font-light leading-6 whitespace-pre-line" style={{ color: colors.text.dark }}>
             {product.description}
           </p>
         </div>
