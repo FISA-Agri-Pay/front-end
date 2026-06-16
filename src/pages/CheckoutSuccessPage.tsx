@@ -45,7 +45,7 @@ export default function CheckoutSuccessPage() {
           <img
             src={paymentLogo}
             alt="결제 완료"
-            className="h-[88px] w-[88px] object-contain"
+            className="h-[120px] w-[120px] object-contain"
           />
         </div>
 
