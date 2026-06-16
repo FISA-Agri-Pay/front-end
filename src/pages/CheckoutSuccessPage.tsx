@@ -86,7 +86,7 @@ export default function CheckoutSuccessPage() {
           </div>
         </section>
 
-        <p className="mt-4 flex items-center gap-1 text-[12px]" style={{ color: colors.text.muted }}>
+        <p className="mt-4 flex items-center justify-center gap-1 text-[12px]" style={{ color: colors.text.muted }}>
           <MessageCircle size={13} />
           배송 및 작업 일정은 카카오톡으로 안내해 드릴게요.
         </p>
