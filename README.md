@@ -8,11 +8,11 @@
 <br/>
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React%2019-61DAFB?style=flat-square&logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite%208-646CFF?style=flat-square&logo=vite&logoColor=white)
-![TanStack Query](https://img.shields.io/badge/TanStack%20Query%205-FF4154?style=flat-square&logo=reactquery&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand%205-433E38?style=flat-square&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS%204-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
+![TanStack Query](https://img.shields.io/badge/TanStack%20Query-FF4154?style=flat-square&logo=reactquery&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand-433E38?style=flat-square&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 
 <br/>
 
@@ -133,6 +133,30 @@ src/
 
 모바일 우선(최대 390px) 레이아웃으로, 데스크톱에서도 모바일 앱처럼 중앙 정렬되어 표시됩니다.
 로그인이 필요한 화면은 `PrivateRoute`로 보호됩니다.
+
+<br>
+
+## 🏗 배포 아키텍처
+
+```mermaid
+flowchart LR
+    subgraph cicd["CI/CD"]
+        J[Jenkins] -->|npm run build| B[dist/]
+        B -->|s3 sync| S3[(S3)]
+        J -->|캐시 무효화| CF
+    end
+
+    U[사용자] --> R53[Route 53] --> WAF[WAF · Shield] --> CF[CloudFront]
+    CF -->|정적 콘텐츠| S3
+    CF -->|API 요청| ALB[ALB]
+    ALB --> EKS[EKS 백엔드]
+    ALB -->|VPN Gateway| ONPREM[온프레미스 Kubernetes<br/>백엔드]
+```
+
+- 온프레미스 **Jenkins**가 빌드 결과물(`dist/`)을 **S3**에 배포하고 **CloudFront 캐시를 무효화**
+- 정적 콘텐츠는 **CloudFront + S3**로 서빙
+- API 요청은 ALB에서 서비스에 따라 분기
+  - 일부는 **AWS EKS**의 백엔드로, 일부는 **VPN 게이트웨이를 거쳐 온프레미스 Kubernetes 클러스터**의 백엔드로 전달되는 하이브리드 구성
 
 <br>
 
