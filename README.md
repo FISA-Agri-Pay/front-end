@@ -5,77 +5,96 @@
 > 내 농사 기록이 신용이 됩니다. 복잡한 서류 없이 스마트폰으로 3분 만에 한도 신청을 끝내고,
 > 씨앗·비료·농약 등 필요한 농자재를 신용으로 먼저 구매한 뒤 수확 후 여유롭게 상환하세요.
 
-<!-- 서비스 대표 이미지 -->
+<br/>
+
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React%2019-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite%208-646CFF?style=flat-square&logo=vite&logoColor=white)
+![TanStack Query](https://img.shields.io/badge/TanStack%20Query%205-FF4154?style=flat-square&logo=reactquery&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand%205-433E38?style=flat-square&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS%204-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 
 <br/>
 
 ## 📱 주요 기능
 
-### 🏠 메인
+### 🏠 메인 · 한도 신청하기
 
-로그인 후 만나는 홈 화면입니다. 내 **신용 한도 현황**(신청 전 / 심사 중 / 승인 완료 / 거절)을 카드로 한눈에 보여주고,
-**사용 가능 잔액**, **배송 중인 주문**, **추천 농자재**를 함께 확인할 수 있습니다.
+<table>
+<tr>
+<td width="30%" valign="top">
+  <img width="300" alt="한도 신청하기" src="https://github.com/user-attachments/assets/42e1c2fb-6093-4d7b-ad0d-05f6331f769f" />
+</td>
+<td valign="top">
 
-<!-- 메인 화면 GIF -->
+로그인 후 만나는 홈 화면에서 내 **신용 한도 현황**(신청 전 / 심사 중 / 승인 완료 / 거절),
+**사용 가능 잔액**, **추천 농자재**, **배송 현황**을 확인할 수 있습니다.
+
+ '외상 한도 확인하기' 버튼 클릭 시 바로 **한도 신청**으로 진입하며, 농업 데이터 기반 신용 심사가 단계별로 진행됩니다.
 
 <br/>
-
-### 📋 한도 신청하기
-
-농업 데이터 기반 신용 심사 플로우입니다. 심사 세션을 시작하면 단계별로 정보를 입력하고 제출합니다.
 
 **안내 → 농지 정보 → 재배 작물 → 보험 가입 여부 → 서류 첨부 → 신청 완료**
 
 - 각 단계 입력값은 세션 단위로 서버에 저장되어, 중간에 실패해도 이어서 진행할 수 있습니다.
-- 재배 작물·보험 여부에 따라 **필요 서류가 동적으로 결정**됩니다. (농업경영체 등록확인서, 농작물재해보험 증권 등)
-- 세션 만료(410) / 유효하지 않은 세션(404) 등 예외 상황을 안내 메시지로 처리합니다.
-
-<!-- 한도 신청 GIF -->
-
+- 재배 작물·보험 여부에 따라 필요 서류가 동적으로 결정됩니다. (농업경영체 등록 확인서, 농작물재해보험 가입 증명서 등)
+- 세션 만료 등 예외 상황도 안내 메시지로 처리합니다.
+</td>
+</tr>
+</table>
 <br/>
 
-### 🛒 상점
+### 🛒 상점 · 결제
 
-씨앗, 비료, 농약 등 농자재를 둘러보고 구매할 수 있는 스토어입니다.
+<table>
+<tr>
+<td width="30%" valign="top">
+  <img width="300" alt="상점" src="https://github.com/user-attachments/assets/a91eb5c4-49a0-4d2e-90d5-125aefb8a218" />
+</td>
+<td valign="top">
 
+씨앗, 비료, 농약 등 농자재를 둘러보고 승인받은 **신용 한도로 결제하는 BNPL** 플로우입니다.
+
+🛒 상점
 - **카테고리 필터 · 상품 검색**으로 원하는 농자재를 빠르게 찾을 수 있습니다.
-- 상품 상세에서 수량을 선택해 **장바구니 담기** 또는 **바로 구매**가 가능합니다.
-- 장바구니 상태는 서버와 동기화되며, 홈 화면에는 추천 상품이 노출됩니다.
+- 상품 상세에서 수량을 선택해 **장바구니 담기** 또는 **바로 구매**가 가능하며, 장바구니 상태는 서버와 동기화됩니다.
 
-<!-- 상점 GIF -->
-
-<br/>
-
-### 💳 결제
-
-승인받은 **신용 한도로 결제하는 BNPL 결제** 플로우입니다.
-
+💳 결제
 - 결제 화면에서 배송지·주문 상품·**남은 한도**를 확인한 뒤 결제를 진행합니다.
 - **결제 PIN 6자리**로 본인 인증 후 결제가 완료됩니다.
   - PIN 미등록 사용자는 **PIN 등록 화면**으로 안내됩니다.
-- 장바구니 결제와 바로 구매(단건 결제)를 모두 지원하며, 결제 완료 화면에서 주문 내역으로 이동할 수 있습니다.
-- 결제 내역과 상환 현황은 **지갑 · 이용 내역** 화면에서 확인합니다.
+- 결제 내역과 상환 현황은 **내 지갑** 또는 **이용 내역** 화면에서 확인합니다.
 
-<!-- 결제 GIF -->
-
+</td>
+</tr>
+</table>
 <br/>
+
 
 ### 🤖 챗봇
 
-농민 전용 AI 챗봇입니다. 대화만으로 서비스의 주요 기능을 조회하고 실행할 수 있습니다.
+<table>
+<tr>
+<td width="30%" valign="top">
+  <img width="300" alt="한도 신청하기" src="https://github.com/user-attachments/assets/66647128-d334-4137-9a53-d3dee9cf1526" />
+</td>
+<td valign="top">
 
-- 자연어 질문에 답변과 함께 **UI 카드**로 응답합니다.
-  - 💰 한도 요약 (총 한도 / 사용액 / 잔여 한도)
-  - 📅 상환 요약 (다음 납부일, 이자, 연체 여부)
-  - 🚚 배송 상태 조회
-  - 🌾 상품 추천
-  - ✅ 결제 확인 (챗봇 안에서 결제 의사 확인까지)
+**농민 전용 AI 챗봇**입니다. AI 챗봇과의 대화만으로도 맞춤형 상품 추천, 주문, 결제까지 서비스의 주요 기능을 실행할 수 있습니다.
+
+- 자연어 질문에 답변과 함께 UI 카드로 응답합니다.
+  - 💰 **한도 요약** (총 한도 / 사용액 / 잔여 한도)
+  - 📅 **상환 요약** (다음 납부일, 이자, 연체 여부)
+  - 🚚 **배송 상태 조회**
+  - 🌾 **상품 추천**
+  - ✅ **결제 확인** (챗봇 안에서 결제 의사 확인까지)
 - 카드의 액션 버튼으로 관련 화면(한도 신청, 상점 등)으로 바로 이동합니다.
 - 세션 기반으로 대화 이력이 유지되며, 세션 복구 실패 시 자동으로 새 세션을 시작합니다.
-
-<!-- 챗봇 GIF -->
-
+</td>
+</tr>
+</table>
 <br/>
+
 
 ## 🛠 기술 스택
 
@@ -117,7 +136,7 @@ src/
 
 <br>
 
-### 환경 변수
+### ⚙️ 환경 변수
 
 백엔드가 마이크로서비스로 분리되어 있어 서비스별 API 주소를 설정합니다.
 (개발 모드에서는 미설정 시 localhost 기본값 사용)
@@ -129,3 +148,16 @@ src/
 | `VITE_API_SHOP_URL` | 상점 서비스 | `http://localhost:8081` |
 | `VITE_API_CART_URL` | 장바구니 서비스 | `http://localhost:8081` |
 | `VITE_API_AIOPS_URL` | AI(챗봇) 서비스 | `http://localhost:8000` |
+
+---
+## 🔗 관련 레포지토리
+
+| 레포 | 설명 |
+| --- | --- |
+| [`back-end`](https://github.com/FISA-Agri-Pay/back-end) | 금융 핵심 도메인 백엔드 |
+| [`front-end-admin`](https://github.com/FISA-Agri-Pay/front-end-admin) | 관리자용 웹 프론트엔드 |
+| [`ai-prediction-model`](https://github.com/FISA-Agri-Pay/ai-prediction-model) | 시계열 예측 모델 · 오토스케일링 정책 |
+| [`mcp-aiops-backend`](https://github.com/FISA-Agri-Pay/mcp-aiops-backend) | FastMCP 기반 AIOps 백엔드 |
+| [`infra`](https://github.com/FISA-Agri-Pay/infra) | Terraform 기반 IaC · 운영 스크립트 |
+| [`git-ops`](https://github.com/FISA-Agri-Pay/git-ops) | ArgoCD GitOps 배포 매니페스트 |
+
