@@ -1,73 +1,131 @@
-# React + TypeScript + Vite
+# 🌱 콩콩팥팥
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **농업 데이터로 신용을 만들고, 수확으로 갚는 농민 BNPL 서비스**
+>
+> 내 농사 기록이 신용이 됩니다. 복잡한 서류 없이 스마트폰으로 3분 만에 한도 신청을 끝내고,
+> 씨앗·비료·농약 등 필요한 농자재를 신용으로 먼저 구매한 뒤 수확 후 여유롭게 상환하세요.
 
-Currently, two official plugins are available:
+<!-- 서비스 대표 이미지 -->
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+<br/>
 
-## React Compiler
+## 📱 주요 기능
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🏠 메인
 
-## Expanding the ESLint configuration
+로그인 후 만나는 홈 화면입니다. 내 **신용 한도 현황**(신청 전 / 심사 중 / 승인 완료 / 거절)을 카드로 한눈에 보여주고,
+**사용 가능 잔액**, **배송 중인 주문**, **추천 농자재**를 함께 확인할 수 있습니다.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+<!-- 메인 화면 GIF -->
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+<br/>
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 📋 한도 신청하기
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+농업 데이터 기반 신용 심사 플로우입니다. 심사 세션을 시작하면 단계별로 정보를 입력하고 제출합니다.
+
+**안내 → 농지 정보 → 재배 작물 → 보험 가입 여부 → 서류 첨부 → 신청 완료**
+
+- 각 단계 입력값은 세션 단위로 서버에 저장되어, 중간에 실패해도 이어서 진행할 수 있습니다.
+- 재배 작물·보험 여부에 따라 **필요 서류가 동적으로 결정**됩니다. (농업경영체 등록확인서, 농작물재해보험 증권 등)
+- 세션 만료(410) / 유효하지 않은 세션(404) 등 예외 상황을 안내 메시지로 처리합니다.
+
+<!-- 한도 신청 GIF -->
+
+<br/>
+
+### 🛒 상점
+
+씨앗, 비료, 농약 등 농자재를 둘러보고 구매할 수 있는 스토어입니다.
+
+- **카테고리 필터 · 상품 검색**으로 원하는 농자재를 빠르게 찾을 수 있습니다.
+- 상품 상세에서 수량을 선택해 **장바구니 담기** 또는 **바로 구매**가 가능합니다.
+- 장바구니 상태는 서버와 동기화되며, 홈 화면에는 추천 상품이 노출됩니다.
+
+<!-- 상점 GIF -->
+
+<br/>
+
+### 💳 결제
+
+승인받은 **신용 한도로 결제하는 BNPL 결제** 플로우입니다.
+
+- 결제 화면에서 배송지·주문 상품·**남은 한도**를 확인한 뒤 결제를 진행합니다.
+- **결제 PIN 6자리**로 본인 인증 후 결제가 완료됩니다.
+  - PIN 미등록 사용자는 **PIN 등록 화면**으로 안내됩니다.
+- 장바구니 결제와 바로 구매(단건 결제)를 모두 지원하며, 결제 완료 화면에서 주문 내역으로 이동할 수 있습니다.
+- 결제 내역과 상환 현황은 **지갑 · 이용 내역** 화면에서 확인합니다.
+
+<!-- 결제 GIF -->
+
+<br/>
+
+### 🤖 챗봇
+
+농민 전용 AI 챗봇입니다. 대화만으로 서비스의 주요 기능을 조회하고 실행할 수 있습니다.
+
+- 자연어 질문에 답변과 함께 **UI 카드**로 응답합니다.
+  - 💰 한도 요약 (총 한도 / 사용액 / 잔여 한도)
+  - 📅 상환 요약 (다음 납부일, 이자, 연체 여부)
+  - 🚚 배송 상태 조회
+  - 🌾 상품 추천
+  - ✅ 결제 확인 (챗봇 안에서 결제 의사 확인까지)
+- 카드의 액션 버튼으로 관련 화면(한도 신청, 상점 등)으로 바로 이동합니다.
+- 세션 기반으로 대화 이력이 유지되며, 세션 복구 실패 시 자동으로 새 세션을 시작합니다.
+
+<!-- 챗봇 GIF -->
+
+<br/>
+
+## 🛠 기술 스택
+
+| 분류 | 기술 | 사용 이유 |
+| --- | --- | --- |
+| Language | TypeScript | API 응답·도메인 모델(신용 상태, 챗봇 카드 등)을 타입으로 정의해 금융 서비스에서 중요한 데이터 정합성을 컴파일 타임에 보장 |
+| Framework | React 19 | 한도 신청·회원가입 같은 다단계 플로우를 상태 기반 컴포넌트로 단순하게 구성, 최신 버전으로 성능 개선 활용 |
+| Build | Vite 8 | 빠른 개발 서버(HMR)와 빌드 속도, `import.meta.env` 기반의 간편한 환경 변수 관리 |
+| Routing | React Router 7 | 중첩 라우트로 `PrivateRoute`(인증 보호)를 선언적으로 적용, `location.state`로 결제 페이지에 주문 정보 전달 |
+| Server State | TanStack Query 5 | 신용 한도·이용 내역 등 서버 데이터의 캐싱/로딩/에러 상태를 자동 관리, 한도 신청 단계별 mutation 흐름을 훅으로 캡슐화 |
+| Client State | Zustand 5 | 장바구니처럼 여러 화면이 공유하는 클라이언트 상태를 보일러플레이트 없이 가볍게 관리 (Redux 대비 코드량 최소화) |
+| HTTP | Axios | 마이크로서비스별(BFF 없이 auth/core/shop/aiops 직접 호출) 클라이언트 인스턴스 분리, 인터셉터로 JWT 첨부·토큰 갱신·에러 처리 공통화 |
+| Styling | Tailwind CSS 4 | 유틸리티 클래스로 모바일 우선(390px) 레이아웃을 빠르게 구현, 별도 CSS 파일 관리 부담 최소화 |
+| Icons | lucide-react | 트리 셰이킹을 지원하는 경량 아이콘 세트로 일관된 UI 아이콘 제공 |
+| CI/CD | Jenkins | Jenkinsfile 기반 파이프라인으로 빌드·배포 자동화 |
+
+<br>
+
+## 📂 프로젝트 구조
+
+```
+src/
+├── api/          # 서비스별 axios 클라이언트 (auth / core / shop / cart / aiops)
+│                 # 토큰 저장소, 인터셉터, 도메인별 API 함수
+├── components/   # 공통 컴포넌트 (BottomNav, Button, CreditLimitCard 등)
+│   ├── ass/      # 한도 신청 단계별 컴포넌트
+│   ├── shop/     # 상점·결제 컴포넌트
+│   └── signup/   # 회원가입 단계별 컴포넌트
+├── hooks/        # React Query 기반 커스텀 훅
+├── pages/        # 라우트 단위 페이지
+├── stores/       # Zustand 스토어
+├── styles/       # 컬러 팔레트 등 공통 스타일
+├── types/        # 도메인 타입 정의
+└── utils/        # 유틸 함수
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+모바일 우선(최대 390px) 레이아웃으로, 데스크톱에서도 모바일 앱처럼 중앙 정렬되어 표시됩니다.
+로그인이 필요한 화면은 `PrivateRoute`로 보호됩니다.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+<br>
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 환경 변수
+
+백엔드가 마이크로서비스로 분리되어 있어 서비스별 API 주소를 설정합니다.
+(개발 모드에서는 미설정 시 localhost 기본값 사용)
+
+| 변수 | 설명 | 개발 기본값 |
+| --- | --- | --- |
+| `VITE_API_AUTH_URL` | 인증 서비스 | `http://localhost:8091` |
+| `VITE_API_CORE_URL` | 코어(신용/지갑) 서비스 | `http://localhost:8090` |
+| `VITE_API_SHOP_URL` | 상점 서비스 | `http://localhost:8081` |
+| `VITE_API_CART_URL` | 장바구니 서비스 | `http://localhost:8081` |
+| `VITE_API_AIOPS_URL` | AI(챗봇) 서비스 | `http://localhost:8000` |
